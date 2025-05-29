@@ -7,248 +7,299 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto Mono', monospace;
             overscroll-behavior: none;
+            background-color: #ffffff; 
         }
-        .drag-over {
-            border-color: #0C76FE; /* Optimist Blue */
-            background-color: #e7f1ff;
-        }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #c4c4c4; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
-
-        .canvas-container { 
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #e5e7eb; 
+        .main-container {
+            background-color: #ffffff;
             border-radius: 0.5rem; 
-            overflow: hidden;
-            box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);
-        }
-         .preview-canvas-wrapper { 
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            padding: 0.25rem;
-            background-color: #f9fafb; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100px; 
-        }
-        .canvas-preview { 
-            max-width: 100%;
-            max-height: 100%; 
-            height: auto;
-            display: block; 
-            background-color: #000; 
-        }
-        .frame-preview-canvas { 
-             max-height: 150px; 
-        }
-        #outputPatternCanvasContainer { 
-            aspect-ratio: var(--output-aspect-ratio, 16 / 9);
-            /* max-height: 360px; Removed to allow more flexibility */
-        }
-        #dropZone { 
-             min-height: 200px; 
-             display: flex; 
-             flex-direction: column;
-             align-items: center;
-             justify-content: center;
+            padding: 2rem; 
+            margin: 1rem auto;
+            max-width: 900px; 
         }
 
+        .header-title { color: #000000; font-weight: 600; } 
+        .header-subtitle { color: #6b7280; font-size: 0.875rem; }
 
-        .controls-container label.control-label {
-            font-weight: 500; margin-bottom: 0.25rem; display: block;
-            font-size: 0.875rem; color: #374151;
+        .upload-button {
+            background-color: #1f2937; 
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.25rem; 
+            font-weight: 500; 
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+            transition: background-color 0.2s;
+            text-transform: uppercase;
         }
+        .upload-button:hover { background-color: #374151; }
+        .upload-button:disabled { background-color: #9ca3af; cursor: not-allowed;}
+        
+        .control-group label.control-label {
+            font-weight: 500; 
+            margin-bottom: 0.75rem; 
+            display: block;
+            font-size: 0.75rem; 
+            color: #000000; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
+        }
+        .control-group .slider-value-label {
+            font-size: 0.75rem; color: #4b5563; 
+        }
+
         .slider {
-            -webkit-appearance: none; width: 100%; height: 8px;
-            border-radius: 5px; background: #d3d3d3; outline: none;
-            opacity: 0.7; -webkit-transition: .2s; transition: opacity .2s;
+            -webkit-appearance: none; width: 100%; height: 4px; 
+            border-radius: 2px; background: #d1d5db; 
+            outline: none;
         }
-        .slider:hover { opacity: 1; }
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none;
-            width: 18px; height: 18px; border-radius: 50%;
-            background: #0C76FE; cursor: pointer;
+            width: 14px; height: 14px; border-radius: 50%; 
+            background: #000000; 
+            cursor: pointer;
+            border: none;
         }
         .slider::-moz-range-thumb {
-            width: 18px; height: 18px; border-radius: 50%;
-            background: #0C76FE; cursor: pointer; border: none;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: #000000; cursor: pointer; border: none;
         }
         
+        .colors-section { margin-top: 1.5rem; }
+        .color-picker-label {
+            font-weight: 500; font-size: 0.75rem; color: #000000;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            margin-right: 0.75rem; 
+        }
         .picker-group {
-            display: flex; flex-wrap: nowrap; gap: 0.375rem; 
-            overflow-x: auto; padding: 0.125rem; max-width: 100%; align-items: center; 
+            display: flex; flex-wrap: nowrap; gap: 0.25rem; 
+            align-items: center; 
         }
-        .radio-label {
+        .radio-label.color-radio { 
             display: flex; align-items: center; justify-content: center; 
-            padding: 0.25rem; min-width: 32px; height: 32px;   
-            border: 1px solid #D1D5DB; border-radius: 0.375rem;
-            cursor: pointer; transition: all 0.2s ease-in-out;
-            background-color: #fff; white-space: nowrap;
+            width: 24px; height: 24px;  
+            border: 1px solid #d1d5db; 
+            border-radius: 0.125rem; 
+            cursor: pointer; transition: all 0.2s;
+            padding: 0; 
         }
-        .radio-label.has-text { padding: 0.125rem 0.5rem; }
-        .radio-label:hover { border-color: #9CA3AF; }
-        .radio-input { opacity: 0; width: 0; height: 0; position: absolute; }
-        .radio-input:checked + .radio-label {
-            border-color: #0C76FE; background-color: #e7f1ff;
-            box-shadow: 0 0 0 2px #0C76FE; 
+        .radio-input:checked + .radio-label.color-radio {
+            border-color: #000000; 
+            box-shadow: 0 0 0 2px #000000; 
         }
         .color-swatch {
-            width: 20px; height: 20px; border-radius: 0.25rem; 
-            border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0;
+            width: 100%; height: 100%; border-radius: 0; 
         }
-        .picker-name { font-size: 0.75rem; line-height: 1rem; margin-left: 0.25rem; }
-        input[type="number"].form-input-styled {
-            padding: 0.375rem 0.5rem;
-            border: 1px solid #D1D5DB;
-            border-radius: 0.375rem; width: 60px; text-align: center;
-        }
-        .progress-bar-container {
-            width: 100%; background-color: #e5e7eb; 
-            border-radius: 0.375rem; overflow: hidden; height: 1.25rem; 
-        }
-        .progress-bar-fill {
-            background-color: #3b82f6; height: 100%; width: 0%; 
-            border-radius: 0.375rem; transition: width 0.1s linear; 
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 0.75rem; 
+        
+        #videoTrimControls { margin-top: 2rem; }
+        input[type="number"].trim-input { 
+            background-color: #f3f4f6; 
+            border: 1px solid #d1d5db; 
+            border-radius: 0.25rem;
+            padding: 0.25rem; width: 50px;
+            text-align: center; font-size: 0.75rem; color: #000000;
         }
         .trim-timeline-container {
-            width: 100%; height: 16px; 
-            background-color: #d1d5db; 
-            border-radius: 0.25rem; margin-top: 0.25rem; position: relative; 
-            cursor: pointer; 
+            width: 100%; height: 8px; 
+            background-color: #e5e7eb; 
+            border-radius: 4px; margin-top: 0.5rem; position: relative; 
         }
         .trim-timeline-selection {
-            position: absolute; height: 100%; background-color: #3b82f6; 
-            opacity: 0.7; border-radius: 0.25rem; 
+            position: absolute; height: 100%; background-color: #000000; 
+            border-radius: 4px; 
+        }
+        .timeline-marker { 
+            position: absolute; top: -4px; width: 3px; height: 16px; 
+            background-color: #000000; border-radius: 1.5px;
+            transform: translateX(-50%); z-index: 10;
+        }
+        .frame-info-text { font-size: 0.75rem; color: #4b5563; text-align: center; margin-top: 0.5rem;}
+
+        .preview-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; 
+            margin-top: 2rem; 
+        }
+        .canvas-preview-wrapper { 
+            width: 100%;
+            border: 1px solid #e5e7eb; 
+            background-color: #ffffff;
+        }
+        .canvas-preview { 
+            max-width: 100%; height: auto; display: block; background-color: #f0f2f5; 
+        }
+        .main-preview-canvas { 
+            width: 100%; 
+            aspect-ratio: var(--output-aspect-ratio, 16 / 9);
+        }
+        .sub-preview-canvas-container { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+        }
+        .sub-preview-canvas { 
+             width: 100%;
+             aspect-ratio: var(--source-aspect-ratio, 16 / 9);
+             max-height: 180px; 
+        }
+        .preview-label {
+            font-size: 0.625rem; 
+            color: #6b7280; 
+            text-align: center;
+            padding: 0.25rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .generate-button {
+            background-color: #000000; 
+            color: white;
+            padding: 0.75rem 0; 
+            border-radius: 0.25rem;
+            font-weight: 500; 
+            font-size: 0.875rem; 
+            width: 100%;
+            margin-top: 1.5rem;
+            transition: background-color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .generate-button:hover { background-color: #374151; }
+        .generate-button:disabled { background-color: #9ca3af; cursor: not-allowed;}
+
+        .progress-bar-container {
+            width: 100%; background-color: #e5e7eb; 
+            border-radius: 0.25rem; overflow: hidden; height: 0.75rem; 
+            margin-top: 0.75rem;
+        }
+        .progress-bar-fill {
+            background-color: #000000; height: 100%; width: 0%; 
+            border-radius: 0.25rem; transition: width 0.2s ease-out; 
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.625rem; 
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-sky-300 selection:text-sky-900">
+<body style="font-family: 'Roboto Mono', monospace;">
 
-    <div class="w-full max-w-7xl bg-white shadow-2xl rounded-xl p-6 md:p-8">
-        <header class="mb-6 md:mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">Brand Video Pattern Generator</h1>
-            <p class="text-slate-500 mt-1">Upload a video and customize the frame pattern.</p>
+    <div class="main-container">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-xl md:text-2xl font-semibold header-title">BRAND VIDEO PATTERN GENERATOR</h1>
+                <p class="text-xs header-subtitle">UPLOAD A VIDEO AND CUSTOMIZE THE VIDEO PATTERN.</p>
+            </div>
+            <button id="uploadButtonTrigger" class="upload-button">UPLOAD</button>
+            <input type="file" id="videoUploadInput" class="hidden" accept="video/*"> 
         </header>
 
-        <div class="controls-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-4 mb-6 md:mb-8 p-4 bg-slate-50 rounded-lg shadow">
-            <div>
-                <label for="patternDensitySlider" class="control-label">Density (<span id="patternDensityValue">50</span>)</label>
-                <input type="range" id="patternDensitySlider" min="10" max="200" value="50" class="slider w-full">
-            </div>
-            <div>
-                <label for="randomnessSlider" class="control-label">Circle/Square Mix (<span id="randomnessValue">0.50</span>)</label>
-                <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
-            </div>
-             <div>
-                <label for="brightnessThresholdSlider" class="control-label">Shape Sensitivity (<span id="brightnessThresholdValue">180</span>)</label>
-                <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="180" class="slider w-full">
-            </div>
-            <div>
-                <label for="minShapeScaleSlider" class="control-label">Min Scale (<span id="minShapeScaleValue">0.10</span>)</label>
-                <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.1" step="0.01" class="slider w-full">
-            </div>
-            <div>
-                <label for="maxShapeScaleSlider" class="control-label">Max Scale (<span id="maxShapeScaleValue">0.90</span>)</label>
-                <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.9" step="0.01" class="slider w-full">
-            </div>
-            <div>
-                <label for="invertSourceColorsToggle" class="control-label">Invert Colors</label>
-                <input type="checkbox" id="invertSourceColorsToggle" class="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" style="accent-color: #0C76FE; vertical-align: middle;" />
-            </div>
-            <div>
-                <label for="videoBitrateSlider" class="control-label">Video Bitrate (<span id="videoBitrateValue">5</span> Mbps)</label>
-                <input type="range" id="videoBitrateSlider" min="1" max="50" value="5" step="1" class="slider w-full">
-            </div>
-            
-            <div class="sm:col-span-1">
-                <label class="control-label">Background Color</label>
-                <div id="bgColorPickerContainer" class="picker-group"></div>
-            </div>
-            <div class="sm:col-span-1">
-                <label class="control-label">Shape Color</label>
-                <div id="shapeColorPickerContainer" class="picker-group"></div>
-            </div>
-            
-            <div id="videoTrimControls" class="sm:col-span-2 md:col-span-3 lg:col-span-3 xl:col-span-2 hidden flex-col">
-                <div class="flex items-end gap-2 w-full">
-                    <div>
-                        <label for="videoStartTimeInput" class="control-label">Start (s)</label>
-                        <input type="number" id="videoStartTimeInput" value="0" min="0" step="0.1" class="form-input-styled">
+        <div class="flex flex-col space-y-8"> 
+            <div class="controls-section space-y-5"> 
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                    <div class="control-group">
+                        <label for="patternDensitySlider" class="control-label">DENSITY <span id="patternDensityValue" class="slider-value-label">(50)</span></label>
+                        <input type="range" id="patternDensitySlider" min="10" max="200" value="50" class="slider w-full">
                     </div>
-                    <div>
-                        <label for="videoEndTimeInput" class="control-label">End (s)</label>
-                        <input type="number" id="videoEndTimeInput" value="5" min="0.1" step="0.1" class="form-input-styled">
+                    <div class="control-group">
+                        <label for="randomnessSlider" class="control-label">SHAPE MIX <span id="randomnessValue" class="slider-value-label">(0.50)</span></label>
+                        <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
                     </div>
-                    <div class="text-xs text-slate-500 self-center pb-1 whitespace-nowrap" id="selectedDurationDisplay">Duration: 5.0s</div>
+                    <div class="control-group">
+                        <label for="brightnessThresholdSlider" class="control-label">SENSITIVITY <span id="brightnessThresholdValue" class="slider-value-label">(180)</span></label>
+                        <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="180" class="slider w-full">
+                    </div>
+                    <div class="control-group">
+                        <label for="minShapeScaleSlider" class="control-label">MIN SCALE <span id="minShapeScaleValue" class="slider-value-label">(0.10)</span></label>
+                        <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.1" step="0.01" class="slider w-full">
+                    </div>
+                    <div class="control-group">
+                        <label for="maxShapeScaleSlider" class="control-label">MAX SCALE <span id="maxShapeScaleValue" class="slider-value-label">(0.90)</span></label>
+                        <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.9" step="0.01" class="slider w-full">
+                    </div>
+                    <div class="control-group">
+                        <label for="videoBitrateSlider" class="control-label">VIDEO BITRATE <span id="videoBitrateValue" class="slider-value-label">(5 Mbps)</span></label>
+                        <input type="range" id="videoBitrateSlider" min="1" max="50" value="5" step="1" class="slider w-full">
+                    </div>
                 </div>
-                <div id="trimTimelineContainer" class="trim-timeline-container">
-                    <div id="trimTimelineSelection" class="trim-timeline-selection"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="progressContainer" class="mb-4 hidden">
-            <div id="progressText" class="text-center text-slate-600 font-medium mb-1"></div>
-            <div class="progress-bar-container">
-                <div id="progressBarFill" class="progress-bar-fill">0%</div>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {/* Coluna da Esquerda: Upload */}
-            <div class="flex flex-col items-center space-y-2">
-                <label class="control-label text-center">1. Upload Your Video</label>
-                <div class="w-full border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-sky-500 transition-colors bg-slate-50 flex items-center justify-center" id="dropZone" style="min-height: 200px;">
-                    <input type="file" id="videoUploadInput" class="hidden" accept="video/*"> 
-                    <div id="dropZoneContent"> 
-                        <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <p class="mt-2 text-sm text-slate-600"><span class="font-semibold text-sky-600">Click to upload</span> or drag & drop video</p>
-                        <p class="text-xs text-slate-500">Video File (MP4, WebM)</p>
+                <div class="colors-section pt-2">
+                    <span class="group-label">COLORS</span>
+                    <div class="flex items-center justify-start space-x-6 mt-2">
+                        <div class="flex items-center">
+                            <span class="color-picker-label mr-2">SHAPE</span>
+                            <div id="shapeColorPickerContainer" class="picker-group"></div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="color-picker-label mr-2">BACKGROUND</span>
+                            <div id="bgColorPickerContainer" class="picker-group"></div>
+                        </div>
+                        <div class="flex items-center ml-auto">
+                            <label for="invertSourceColorsToggle" class="control-label text-xs whitespace-nowrap mr-2">INVERT</label>
+                            <input type="checkbox" id="invertSourceColorsToggle" class="h-4 w-4 text-black border-gray-400 rounded focus:ring-black" style="accent-color: #000000;" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="videoTrimControls" class="hidden flex-col pt-4">
+                    <div id="trimTimelineContainer" class="trim-timeline-container mb-2">
+                        <div id="trimTimelineSelection" class="trim-timeline-selection"></div>
+                        <div id="trimTimelineStartMarker" class="timeline-marker" style="left: 0%;"></div>
+                        <div id="trimTimelineEndMarker" class="timeline-marker" style="left: 0%;"></div>
+                    </div>
+                    <div class="flex justify-between items-center w-full">
+                        <div class="flex items-center gap-1">
+                            <label for="videoStartTimeInput" class="text-xs text-slate-600">START</label>
+                            <input type="number" id="videoStartTimeInput" value="0" min="0" step="0.1" class="trim-input">
+                        </div>
+                        <div class="text-xs text-slate-600 mx-2" id="selectedDurationDisplay">0 FRAMES (0.0 SECONDS)</div>
+                        <div class="flex items-center gap-1">
+                            <label for="videoEndTimeInput" class="text-xs text-slate-600">END</label>
+                            <input type="number" id="videoEndTimeInput" value="5" min="0.1" step="0.1" class="trim-input">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Coluna da Direita: Previews e Padrão Gerado */}
-            <div class="flex flex-col items-center space-y-4">
+            <div class="preview-section flex flex-col space-y-4">
+                <div id="dropZone" class="w-full border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-black transition-colors bg-gray-50">
+                     <div id="dropZoneContent"> 
+                        <svg class="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        <p class="mt-1 text-xs text-gray-500"><span class="font-semibold text-black">UPLOAD VIDEO</span> OR DRAG & DROP</p>
+                        <p class="text-2xs text-gray-400">MP4, WEBM</p>
+                    </div>
+                </div>
+                
+                <div class="w-full">
+                    <div id="outputPatternCanvasContainer" class="canvas-container bg-gray-800">
+                        <canvas id="outputPatternCanvas" class="canvas-preview main-preview-canvas"></canvas>
+                    </div>
+                </div>
+
                 <div id="framePreviewsContainer" class="w-full grid grid-cols-2 gap-4 hidden">
                     <div class="preview-canvas-wrapper">
-                        <label class="control-label text-xs text-center block mb-1">Start Frame</label>
-                        <canvas id="sourcePreviewCanvas" class="canvas-preview frame-preview-canvas"></canvas>
+                        <div class="preview-label">START</div>
+                        <canvas id="sourcePreviewCanvas" class="canvas-preview sub-preview-canvas"></canvas>
                     </div>
                     <div class="preview-canvas-wrapper">
-                         <label class="control-label text-xs text-center block mb-1">End Frame</label>
-                         <canvas id="endFramePreviewCanvas" class="canvas-preview frame-preview-canvas"></canvas>
+                         <div class="preview-label">END</div>
+                         <canvas id="endFramePreviewCanvas" class="canvas-preview sub-preview-canvas"></canvas>
                     </div>
                 </div>
-                <div class="w-full">
-                    <label class="control-label mb-2 text-center">Generated Pattern Preview (from Start Frame)</label>
-                    <div id="outputPatternCanvasContainer" class="canvas-container">
-                        <canvas id="outputPatternCanvas" class="canvas-preview"></canvas>
+                
+                <button id="processVideoButton" class="generate-button" disabled>GENERATE</button>
+                
+                <div id="progressContainer" class="w-full mt-1 hidden">
+                    <div id="progressText" class="text-center text-gray-600 font-medium mb-1 text-xs"></div>
+                    <div class="progress-bar-container">
+                        <div id="progressBarFill" class="progress-bar-fill">0%</div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="mt-6 md:mt-8 text-center">
-            <button id="processVideoButton" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                Generate Video Pattern
-            </button>
         </div>
         <video id="sourceVideoElement" style="display: none;" playsinline muted></video>
     </div>
@@ -262,7 +313,8 @@
             { name: "Sky Blue", hex: "#BEDAE2" }, { name: "Orchid", hex: "#E57DE1" },
             { name: "Maroon", hex: "#65211A" }
         ];
-        const PREVIEW_CANVAS_MAX_DIM = 500; 
+        const PREVIEW_CANVAS_MAX_DIM = 600; 
+        const SUB_PREVIEW_MAX_DIM = 200; 
         const TARGET_FPS = 30; 
         const MAX_PROCESSING_DURATION = 30; 
         let VIDEO_BITRATE = 5000000; 
@@ -286,6 +338,7 @@
         const shapeColorPickerContainer = document.getElementById('shapeColorPickerContainer');
         
         const videoUploadInput = document.getElementById('videoUploadInput');
+        const uploadButtonTrigger = document.getElementById('uploadButtonTrigger'); 
         const dropZone = document.getElementById('dropZone');
         const dropZoneContent = document.getElementById('dropZoneContent');
         
@@ -306,10 +359,11 @@
         const selectedDurationDisplay = document.getElementById('selectedDurationDisplay'); 
         const trimTimelineContainer = document.getElementById('trimTimelineContainer'); 
         const trimTimelineSelection = document.getElementById('trimTimelineSelection'); 
+        const trimTimelineStartMarker = document.getElementById('trimTimelineStartMarker'); 
+        const trimTimelineEndMarker = document.getElementById('trimTimelineEndMarker'); 
         const progressContainer = document.getElementById('progressContainer'); 
         const progressText = document.getElementById('progressText'); 
         const progressBarFill = document.getElementById('progressBarFill'); 
-
 
         let currentVideoFile = null;
         let videoAspectRatio = 16 / 9; 
@@ -328,13 +382,10 @@
         function calculateCanvasDimensions(maxDim, aspectRatio) {
             let canvasWidth, canvasHeight;
             if (!aspectRatio || isNaN(aspectRatio)) aspectRatio = 16/9; 
-
             if (aspectRatio >= 1) { 
-                canvasWidth = maxDim;
-                canvasHeight = maxDim / aspectRatio;
+                canvasWidth = maxDim; canvasHeight = maxDim / aspectRatio;
             } else { 
-                canvasHeight = maxDim;
-                canvasWidth = maxDim * aspectRatio;
+                canvasHeight = maxDim; canvasWidth = maxDim * aspectRatio;
             }
             return { width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
         }
@@ -350,10 +401,10 @@
             
             if (isPlaceholder) {
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = "#F9FAFB"; 
+                ctx.fillStyle = "#f0f2f5"; 
                 ctx.fillRect(0, 0, width, height);
-                ctx.fillStyle = "#9CA3AF"; 
-                ctx.font = `${Math.min(14, width / 15)}px Inter`; 
+                ctx.fillStyle = "#6b7280"; 
+                ctx.font = `bold ${Math.min(12, width / 15)}px 'Roboto Mono', monospace`; 
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(placeholderText, width / 2, height / 2);
@@ -374,12 +425,12 @@
 
             const radioLabel = document.createElement('label');
             radioLabel.htmlFor = radioId;
-            radioLabel.className = 'radio-label';
+            radioLabel.className = 'radio-label color-radio'; 
             
             let labelContent = '';
             if (isColorOption) {
                 labelContent = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
-            } else {
+            } else { 
                 radioLabel.classList.add('has-text'); 
                 labelContent = `<span class="picker-name">${optionData.name}</span>`;
             }
@@ -410,19 +461,18 @@
 
             processVideoButton.disabled = !currentVideoFile || !sourceVideoElement.src || sourceVideoElement.readyState < 2 || isProcessingVideo || !trimIsValid;
             if (isProcessingVideo) {
-                processVideoButton.textContent = "Processing...";
+                processVideoButton.textContent = "PROCESSING...";
             } else {
-                processVideoButton.textContent = "Generate Video Pattern";
+                processVideoButton.textContent = "GENERATE";
             }
         }
         
         function updateSelectedDurationDisplay() {
-            console.log("Updating selected duration display");
             try {
                 const start = parseFloat(videoStartTimeInput.value) || 0;
                 const end = parseFloat(videoEndTimeInput.value) || 0;
                 const duration = Math.max(0, end - start);
-                selectedDurationDisplay.textContent = `Duration: ${duration.toFixed(1)}s`;
+                selectedDurationDisplay.textContent = `${Math.floor(duration * TARGET_FPS)} FRAMES (${duration.toFixed(1)} SECONDS)`;
                 
                 let isValid = true;
                 if (duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0) {
@@ -439,11 +489,12 @@
         }
 
         function updateTrimTimelineVisual() {
-            console.log("Updating trim timeline visual");
             try {
                 if (!currentVideoFile || videoOriginalDuration === 0) {
                     trimTimelineSelection.style.width = '0%';
                     trimTimelineSelection.style.left = '0%';
+                    trimTimelineStartMarker.style.left = '0%';
+                    trimTimelineEndMarker.style.left = '0%';
                     return;
                 }
                 const start = parseFloat(videoStartTimeInput.value) || 0;
@@ -455,6 +506,9 @@
 
                 trimTimelineSelection.style.left = `${Math.max(0, Math.min(100, startPercent))}%`;
                 trimTimelineSelection.style.width = `${Math.max(0, Math.min(100, widthPercent))}%`;
+                trimTimelineStartMarker.style.left = `${Math.max(0, Math.min(100, startPercent))}%`;
+                trimTimelineEndMarker.style.left = `${Math.max(0, Math.min(100, endPercent))}%`;
+
             } catch (error) {
                 console.error("Error in updateTrimTimelineVisual:", error);
             }
@@ -462,24 +516,19 @@
         
         async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) {
             if (!sourceVideoElement.src || sourceVideoElement.readyState < 1) { 
-                 console.warn(`seekAndDrawPreview called too early for ${targetCanvas.id}. Video not ready.`);
-                 const placeholderText = targetCanvas === sourcePreviewCanvas ? "Start Frame" : "End Frame";
-                 setupInitialCanvas(targetCanvas, 150, videoAspectRatio, true, placeholderText); // Redesenha placeholder
+                 const placeholderText = targetCanvas === sourcePreviewCanvas ? "START" : "END";
+                 setupInitialCanvas(targetCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, placeholderText); 
                  return;
             }
-            console.log(`Seeking to ${time} for ${targetCanvas.id}`);
             
             return new Promise((resolve, reject) => {
                 const onSeeked = () => {
-                    console.log(`Seeked to ${sourceVideoElement.currentTime} for ${targetCanvas.id}`);
                     sourceVideoElement.removeEventListener('seeked', onSeeked);
                     sourceVideoElement.removeEventListener('error', onSeekError); 
                     
                     const previewAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-                    const maxDimForThisPreview = 150; 
-
                     const {width: previewWidth, height: previewHeight} = calculateCanvasDimensions(
-                        maxDimForThisPreview, 
+                        SUB_PREVIEW_MAX_DIM, 
                         previewAspectRatio
                     );
                     targetCanvas.width = previewWidth;
@@ -508,22 +557,18 @@
         }
 
         function updateSliderValueDisplays() {
-            patternDensityValueDisplay.textContent = patternDensitySlider.value;
-            randomnessValueDisplay.textContent = parseFloat(randomnessSlider.value).toFixed(2);
-            brightnessThresholdValueDisplay.textContent = brightnessThresholdSlider.value;
-            minShapeScaleValueDisplay.textContent = parseFloat(minShapeScaleSlider.value).toFixed(2);
-            maxShapeScaleValueDisplay.textContent = parseFloat(maxShapeScaleSlider.value).toFixed(2);
-            videoBitrateValueDisplay.textContent = videoBitrateSlider.value; 
+            patternDensityValueDisplay.textContent = `(${patternDensitySlider.value})`;
+            randomnessValueDisplay.textContent = `(${parseFloat(randomnessSlider.value).toFixed(2)})`;
+            brightnessThresholdValueDisplay.textContent = `(${brightnessThresholdSlider.value})`;
+            minShapeScaleValueDisplay.textContent = `(${parseFloat(minShapeScaleSlider.value).toFixed(2)})`;
+            maxShapeScaleValueDisplay.textContent = `(${parseFloat(maxShapeScaleSlider.value).toFixed(2)})`;
+            videoBitrateValueDisplay.textContent = `(${videoBitrateSlider.value} Mbps)`; 
         }
 
         function handleVideoUpload(event) { 
-            console.log("handleVideoUpload called");
             try {
                 if (event.target.files && event.target.files[0]) {
-                    console.log("File selected:", event.target.files[0].name);
                     loadVideoFromFile(event.target.files[0]);
-                } else {
-                    console.log("No file selected or event target issue");
                 }
             } catch (error) {
                 console.error("Error in handleVideoUpload:", error);
@@ -531,22 +576,21 @@
         }
 
         function loadVideoFromFile(file) { 
-            console.log("loadVideoFromFile called for:", file.name);
             try {
                 resetVideoState(); 
                 currentVideoFile = file;
                 const objectURL = URL.createObjectURL(currentVideoFile);
                 sourceVideoElement.src = objectURL;
-                console.log("Video source set to object URL:", objectURL);
+                
+                dropZone.classList.add('hidden'); 
+                framePreviewsContainer.classList.remove('hidden'); 
 
                 sourceVideoElement.onloadedmetadata = async () => {
-                    console.log("Video metadata loaded. Duration:", sourceVideoElement.duration);
                     try {
                         videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
                         videoOriginalDuration = sourceVideoElement.duration;
                         
-                        setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern (from Start Frame)");
-
+                        setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
 
                         videoStartTimeInput.max = videoOriginalDuration.toFixed(1); 
                         videoEndTimeInput.max = videoOriginalDuration.toFixed(1);
@@ -558,26 +602,21 @@
                         
                         updateSelectedDurationDisplay(); 
                         videoTrimControls.classList.remove('hidden');
-                        framePreviewsContainer.classList.remove('hidden'); 
-                        dropZoneContent.classList.add('hidden'); 
-
+                        
                         seekTarget = 'start';
                         await seekAndDrawPreview(parseFloat(videoStartTimeInput.value), sourcePreviewCanvas, sourcePreviewCtx, true); 
                         seekTarget = 'end';
                         await seekAndDrawPreview(parseFloat(videoEndTimeInput.value), endFramePreviewCanvas, endFramePreviewCtx);
                         updateProcessButtonState();
-                        console.log("Initial previews drawn.");
                     } catch (e) {
                         console.error("Error in onloadedmetadata drawing previews:", e);
                     }
                 };
 
                 sourceVideoElement.onseeked = () => { 
-                    console.log("Global onseeked, target:", seekTarget, "currentTime:", sourceVideoElement.currentTime);
                     if (isProcessingVideo && seekTarget === 'process') { 
                         processCurrentFrameForVideo();
                     }
-                    // A lógica de atualização de preview de IN/OUT é tratada dentro de seekAndDrawPreview
                 };
                 sourceVideoElement.onerror = (e) => { 
                     console.error("Error loading video element:", e, sourceVideoElement.error);
@@ -590,7 +629,6 @@
         }
         
         function resetVideoState() { 
-            console.log("Resetting video state");
             try {
                 if (sourceVideoElement.src && sourceVideoElement.src.startsWith('blob:')) { 
                     URL.revokeObjectURL(sourceVideoElement.src);
@@ -604,12 +642,12 @@
                 videoAspectRatio = 16/9; 
                 videoOriginalDuration = 0;
                 
-                dropZoneContent.classList.remove('hidden'); 
+                dropZone.classList.remove('hidden'); 
                 framePreviewsContainer.classList.add('hidden'); 
 
-                setupInitialCanvas(sourcePreviewCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Start Frame");
-                setupInitialCanvas(endFramePreviewCanvas, PREVIEW_CANVAS_MAX_DIM / 2, videoAspectRatio, true, "End Frame");
-                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+                setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "START");
+                setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "END");
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
 
                 videoTrimControls.classList.add('hidden');
                 progressContainer.classList.add('hidden'); 
@@ -636,11 +674,9 @@
 
         function generatePatternForCurrentFrame() {
             if (!currentVideoFile || !offscreenFrameCanvas.width || sourceVideoElement.readyState < 2 ) { 
-                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
                 return;
             }
-            // offscreenFrameCanvas deve ter o frame correto (do IN point ou do seek atual)
-            // desenhado por seekAndDrawPreview ou pelo loop de processamento
             generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx, PREVIEW_CANVAS_MAX_DIM, offscreenFrameCanvas);
         }
         
@@ -675,9 +711,10 @@
 
             if (!sourceCanvasForSampling || !sourceCanvasForSampling.width || !sourceCanvasForSampling.height) {
                 targetCtx.fillStyle = "#999";
-                targetCtx.font = `${Math.min(16, canvasWidth / 20)}px Inter`;
+                targetCtx.font = `bold ${Math.min(12, canvasWidth / 18)}px 'Roboto Mono', monospace`;
                 targetCtx.textAlign = "center";
-                targetCtx.fillText("Pattern Preview", canvasWidth / 2, canvasHeight / 2);
+                targetCtx.textBaseline = "middle";
+                targetCtx.fillText("GENERATED PATTERN PREVIEW", canvasWidth / 2, canvasHeight / 2);
                 return;
             }
             
@@ -860,7 +897,6 @@
             }
         }
         
-        // --- Função de Inicialização Principal ---
         function addEventListeners() {
             console.log("Adding event listeners");
             try {
@@ -880,6 +916,7 @@
                     generatePatternForCurrentFrame();
                 }));
                 
+                uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
                 dropZone.addEventListener('click', () => {
                     console.log("Drop zone clicked");
                     videoUploadInput.click();
@@ -953,21 +990,20 @@
             }
         }
 
+        // --- Função de Inicialização Principal ---
         function initialize() {
-            console.log("Initializing App");
+            console.log("Initializing App V16.1");
             BRAND_COLORS.forEach((color, index) => {
                 createColorRadioOption(bgColorPickerContainer, 'backgroundColor', color, index === 0); 
                 createColorRadioOption(shapeColorPickerContainer, 'shapeColor', color, index === 1); 
             });
             
-            setupInitialCanvas(sourcePreviewCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Start Frame");
-            setupInitialCanvas(endFramePreviewCanvas, PREVIEW_CANVAS_MAX_DIM / 2, videoAspectRatio, true, "End Frame");
-            setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+            setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "START");
+            setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "END");
+            setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
 
-            // Esconde o container de previews de IN/OUT inicialmente, mostra o dropZoneContent
             framePreviewsContainer.classList.add('hidden'); 
             dropZoneContent.classList.remove('hidden'); 
-
 
             recordingCanvas = document.createElement('canvas');
             recordingCtx = recordingCanvas.getContext('2d');
