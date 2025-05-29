@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -131,12 +131,12 @@
     <div class="w-full max-w-7xl bg-white shadow-2xl rounded-xl p-6 md:p-8">
         <header class="mb-6 md:mb-8 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-700">Brand Video Pattern Generator</h1>
-            <p class="text-slate-500 mt-1">Upload a video and customize the pattern of the frames.</p>
+            <p class="text-slate-500 mt-1">Carregue um vídeo e personalize o padrão dos frames.</p>
         </header>
 
         <div class="controls-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-4 mb-6 md:mb-8 p-4 bg-slate-50 rounded-lg shadow">
             <div>
-                <label for="patternDensitySlider" class="control-label">Density (<span id="patternDensityValue">50</span>)</label>
+                <label for="patternDensitySlider" class="control-label">Densidade (<span id="patternDensityValue">50</span>)</label>
                 <input type="range" id="patternDensitySlider" min="10" max="200" value="50" class="slider w-full">
             </div>
             <div>
@@ -144,42 +144,42 @@
                 <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
             </div>
              <div>
-                <label for="brightnessThresholdSlider" class="control-label">Sensitivity (<span id="brightnessThresholdValue">180</span>)</label>
+                <label for="brightnessThresholdSlider" class="control-label">Sensibilidade (<span id="brightnessThresholdValue">180</span>)</label>
                 <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="180" class="slider w-full">
             </div>
             <div>
-                <label for="minShapeScaleSlider" class="control-label">Min Scale (<span id="minShapeScaleValue">0.10</span>)</label>
+                <label for="minShapeScaleSlider" class="control-label">Escala Mín. (<span id="minShapeScaleValue">0.10</span>)</label>
                 <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.1" step="0.01" class="slider w-full">
             </div>
             <div>
-                <label for="maxShapeScaleSlider" class="control-label">Max Scale (<span id="maxShapeScaleValue">0.90</span>)</label>
+                <label for="maxShapeScaleSlider" class="control-label">Escala Máx. (<span id="maxShapeScaleValue">0.90</span>)</label>
                 <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.9" step="0.01" class="slider w-full">
             </div>
             <div>
-                <label for="invertSourceColorsToggle" class="control-label">Invert Colors</label>
-                <input type="checkbox" id="invertSourceColorsToggle" class="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" style="accent-color: #0C76FE; vertical-align: middle;">
+                <label for="invertSourceColorsToggle" class="control-label">Inverter Cores</label>
+                <input type="checkbox" id="invertSourceColorsToggle" class="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" style="accent-color: #0C76FE; vertical-align: middle;" />
             </div>
             
             <div class="sm:col-span-1">
-                <label class="control-label">Background Color</label>
+                <label class="control-label">Cor de Fundo</label>
                 <div id="bgColorPickerContainer" class="picker-group"></div>
             </div>
             <div class="sm:col-span-1">
-                <label class="control-label">Shape Color</label>
+                <label class="control-label">Cor da Forma</label>
                 <div id="shapeColorPickerContainer" class="picker-group"></div>
             </div>
             
             <div id="videoTrimControls" class="sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-2 hidden flex-col">
                 <div class="flex items-end gap-2 w-full">
                     <div>
-                        <label for="videoStartTimeInput" class="control-label">Start (s)</label>
+                        <label for="videoStartTimeInput" class="control-label">Início (s)</label>
                         <input type="number" id="videoStartTimeInput" value="0" min="0" step="0.1" class="form-input-styled">
                     </div>
                     <div>
-                        <label for="videoEndTimeInput" class="control-label">End (s)</label>
+                        <label for="videoEndTimeInput" class="control-label">Fim (s)</label>
                         <input type="number" id="videoEndTimeInput" value="5" min="0.1" step="0.1" class="form-input-styled">
                     </div>
-                    <div class="text-xs text-slate-500 self-center pb-1 whitespace-nowrap" id="selectedDurationDisplay">Duration: 5.0s</div>
+                    <div class="text-xs text-slate-500 self-center pb-1 whitespace-nowrap" id="selectedDurationDisplay">Duração: 5.0s</div>
                 </div>
                 <div id="trimTimelineContainer" class="trim-timeline-container">
                     <div id="trimTimelineSelection" class="trim-timeline-selection"></div>
@@ -197,22 +197,22 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div class="flex flex-col items-center">
-                <label class="control-label mb-2 text-center">Source Video Preview (current frame)</label>
-                <div class="h-72 md:h-auto md:min-h-[200px] w-full md:aspect-[16/9] border-2 border-dashed border-slate-300 rounded-lg p-2 text-center cursor-pointer hover:border-sky-500 transition-colors relative select-none" id="dropZone">
+                <label class="control-label mb-2 text-center">Preview do Vídeo Fonte (frame atual)</label>
+                <div class="h-72 md:h-auto md:min-h-[200px] w-full md:aspect-[16/9] border-2 border-dashed border-slate-300 rounded-lg p-2 text-center cursor-pointer hover:border-sky-500 transition-colors bg-slate-50 flex items-center justify-center" id="dropZone">
                     <input type="file" id="videoUploadInput" class="hidden" accept="video/*"> 
                     <div id="dropZoneContent">
                         <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24V8a4 4 0 00-4-4z"/>
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p class="mt-2 text-sm text-slate-600"><span class="font-semibold text-sky-600">Click to upload</span> or drag & drop video</p>
-                        <p class="text-xs text-slate-500">Video File (MP4, WebM)</p>
+                        <p class="mt-2 text-sm text-slate-600"><span class="font-semibold text-sky-600">Clique para carregar</span> ou arraste e solte o vídeo</p>
+                        <p class="text-xs text-slate-500">Arquivo de Vídeo (MP4, WebM)</p>
                     </div>
                     <canvas id="sourcePreviewCanvas" class="canvas-preview hidden"></canvas>
                 </div>
             </div>
 
             <div class="flex flex-col items-center">
-                <label class="control-label mb-2 text-center">Generated Pattern Preview</label>
+                <label class="control-label mb-2 text-center">Preview do Padrão Gerado</label>
                 <div id="outputPatternCanvasContainer" class="canvas-container h-72 md:h-auto md:min-h-[200px] w-full md:aspect-[16/9]">
                     <canvas id="outputPatternCanvas" class="canvas-preview"></canvas>
                 </div>
@@ -220,15 +220,15 @@
         </div>
         
         <div class="mt-6 md:mt-8 text-center">
-            <button id="processVideoButton" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                Generate Pattern Video
+            <button id="processVideoButton" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Gerar Padrão de Vídeo
             </button>
         </div>
         <video id="sourceVideoElement" style="display: none;" playsinline muted></video>
     </div>
 
     <script>
-        // --- Configuration ---
+        // --- Configuração ---
         const BRAND_COLORS = [
             { name: "White", hex: "#FFFFFF" }, { name: "Black", hex: "#0F0F0F" },
             { name: "Midnight Blue", hex: "#24248E" }, { name: "Optimist Blue", hex: "#0C76FE" },
@@ -238,31 +238,26 @@
         ];
         const PREVIEW_CANVAS_MAX_DIM = 500; 
         const TARGET_FPS = 30; 
-        const MAX_PROCESSING_DURATION = 10; // Seconds
-        const VIDEO_BITRATE = 5000000; // Ex: 5 Mbps for better quality
+        const MAX_PROCESSING_DURATION = 10; // Segundos
+        const VIDEO_BITRATE = 5000000; // Ex: 5 Mbps para tentar melhor qualidade
 
-        // --- DOM Elements ---
-        // ... (No translation needed for JS variable names)
-
-        // --- UI text translation for JS ---
-        // Below are the translations for all static UI strings in JS that were in Portuguese.
-        // "Por favor, carregue um vídeo ou aguarde o processamento atual." => "Please upload a video or wait for the current processing."
-        // "Configuração de trim inválida. Duração deve ser > 0 e <= ${MAX_PROCESSING_DURATION}s, e dentro dos limites do vídeo." => "Invalid trim configuration. Duration must be > 0 and <= ${MAX_PROCESSING_DURATION}s, and within the video limits."
-        // "Iniciando processamento..." => "Starting processing..."
-        // "Falha ao iniciar gravação." => "Failed to start recording."
-        // "Vídeo gerado e download iniciado!" => "Video generated and download started!"
-        // "Processando frame ${currentFrameProcessing} de ${totalFramesToProcessForVideo}..." => "Processing frame ${currentFrameProcessing} of ${totalFramesToProcessForVideo}..."
-        // "Carregue um vídeo" => "Upload a video"
-        // "Padrão aparecerá aqui" => "Pattern will appear here"
-        // "Clique para carregar" => "Click to upload"
-        // "ou arraste e solte o vídeo" => "or drag & drop video"
-        // "Arquivo de Vídeo (MP4, WebM)" => "Video File (MP4, WebM)"
-        // "Erro ao carregar vídeo. Verifique o console para detalhes." => "Error loading video. Check the console for details."
-
-        // All other script logic and comments remain unchanged for accuracy.
-        // If you want the script to use English for alerts and static UI, replace the above strings in the JavaScript as shown in comments.
-
-        // ... (rest of the script is unchanged, except for replacing alerts/UI strings with English as shown above)
-    </script>
-</body>
-</html>
+        // --- Elementos DOM ---
+        const patternDensitySlider = document.getElementById('patternDensitySlider');
+        const patternDensityValueDisplay = document.getElementById('patternDensityValue');
+        const randomnessSlider = document.getElementById('randomnessSlider');
+        const randomnessValueDisplay = document.getElementById('randomnessValue');
+        const brightnessThresholdSlider = document.getElementById('brightnessThresholdSlider');
+        const brightnessThresholdValueDisplay = document.getElementById('brightnessThresholdValue');
+        const minShapeScaleSlider = document.getElementById('minShapeScaleSlider');
+        const minShapeScaleValueDisplay = document.getElementById('minShapeScaleValue');
+        const maxShapeScaleSlider = document.getElementById('maxShapeScaleSlider');
+        const maxShapeScaleValueDisplay = document.getElementById('maxShapeScaleValue');
+        const invertSourceColorsToggle = document.getElementById('invertSourceColorsToggle');
+        
+        const bgColorPickerContainer = document.getElementById('bgColorPickerContainer');
+        const shapeColorPickerContainer = document.getElementById('shapeColorPickerContainer');
+        
+        const videoUploadInput = document.getElementById('videoUploadInput');
+        const dropZone = document.getElementById('dropZone');
+        const dropZoneContent = document.getElementById('dropZoneContent');
+        
