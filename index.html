@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brand Video Pattern Generator (Debug)</title>
+    <title>Brand Video Pattern Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -28,16 +28,40 @@
             border-radius: 0.5rem; 
             overflow: hidden;
             box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);
-            aspect-ratio: 16 / 9; 
-            max-height: 360px; 
+        }
+         .preview-canvas-wrapper { 
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            padding: 0.25rem;
+            background-color: #f9fafb; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px; 
         }
         .canvas-preview { 
             max-width: 100%;
-            max-height: 100%;
+            max-height: 100%; 
             height: auto;
-            border: 1px solid #d1d5db; 
-            border-radius: 0.25rem; 
+            display: block; 
+            background-color: #000; 
         }
+        .frame-preview-canvas { 
+             max-height: 150px; 
+        }
+        #outputPatternCanvasContainer { 
+            aspect-ratio: var(--output-aspect-ratio, 16 / 9);
+            /* max-height: 360px; Removed to allow more flexibility */
+        }
+        #dropZone { 
+             min-height: 200px; 
+             display: flex; 
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
+        }
+
 
         .controls-container label.control-label {
             font-weight: 500; margin-bottom: 0.25rem; display: block;
@@ -88,38 +112,24 @@
             border-radius: 0.375rem; width: 60px; text-align: center;
         }
         .progress-bar-container {
-            width: 100%;
-            background-color: #e5e7eb; 
-            border-radius: 0.375rem; 
-            overflow: hidden;
-            height: 1.25rem; 
+            width: 100%; background-color: #e5e7eb; 
+            border-radius: 0.375rem; overflow: hidden; height: 1.25rem; 
         }
         .progress-bar-fill {
-            background-color: #3b82f6; 
-            height: 100%;
-            width: 0%; 
-            border-radius: 0.375rem; 
-            transition: width 0.1s linear; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75rem; 
+            background-color: #3b82f6; height: 100%; width: 0%; 
+            border-radius: 0.375rem; transition: width 0.1s linear; 
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.75rem; 
         }
         .trim-timeline-container {
-            width: 100%;
-            height: 20px; 
-            background-color: #e5e7eb; 
-            border-radius: 0.25rem; 
-            margin-top: 0.5rem; 
-            position: relative; 
+            width: 100%; height: 16px; 
+            background-color: #d1d5db; 
+            border-radius: 0.25rem; margin-top: 0.25rem; position: relative; 
+            cursor: pointer; 
         }
         .trim-timeline-selection {
-            position: absolute;
-            height: 100%;
-            background-color: #3b82f6; 
-            opacity: 0.7;
-            border-radius: 0.25rem; 
+            position: absolute; height: 100%; background-color: #3b82f6; 
+            opacity: 0.7; border-radius: 0.25rem; 
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -131,55 +141,59 @@
     <div class="w-full max-w-7xl bg-white shadow-2xl rounded-xl p-6 md:p-8">
         <header class="mb-6 md:mb-8 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-700">Brand Video Pattern Generator</h1>
-            <p class="text-slate-500 mt-1">Carregue um vídeo e personalize o padrão dos frames.</p>
+            <p class="text-slate-500 mt-1">Upload a video and customize the frame pattern.</p>
         </header>
 
         <div class="controls-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-4 mb-6 md:mb-8 p-4 bg-slate-50 rounded-lg shadow">
             <div>
-                <label for="patternDensitySlider" class="control-label">Densidade (<span id="patternDensityValue">50</span>)</label>
+                <label for="patternDensitySlider" class="control-label">Density (<span id="patternDensityValue">50</span>)</label>
                 <input type="range" id="patternDensitySlider" min="10" max="200" value="50" class="slider w-full">
             </div>
             <div>
-                <label for="randomnessSlider" class="control-label">Mix C/Q (<span id="randomnessValue">0.50</span>)</label>
+                <label for="randomnessSlider" class="control-label">Circle/Square Mix (<span id="randomnessValue">0.50</span>)</label>
                 <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
             </div>
              <div>
-                <label for="brightnessThresholdSlider" class="control-label">Sensibilidade (<span id="brightnessThresholdValue">180</span>)</label>
+                <label for="brightnessThresholdSlider" class="control-label">Shape Sensitivity (<span id="brightnessThresholdValue">180</span>)</label>
                 <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="180" class="slider w-full">
             </div>
             <div>
-                <label for="minShapeScaleSlider" class="control-label">Escala Mín. (<span id="minShapeScaleValue">0.10</span>)</label>
+                <label for="minShapeScaleSlider" class="control-label">Min Scale (<span id="minShapeScaleValue">0.10</span>)</label>
                 <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.1" step="0.01" class="slider w-full">
             </div>
             <div>
-                <label for="maxShapeScaleSlider" class="control-label">Escala Máx. (<span id="maxShapeScaleValue">0.90</span>)</label>
+                <label for="maxShapeScaleSlider" class="control-label">Max Scale (<span id="maxShapeScaleValue">0.90</span>)</label>
                 <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.9" step="0.01" class="slider w-full">
             </div>
             <div>
-                <label for="invertSourceColorsToggle" class="control-label">Inverter Cores</label>
+                <label for="invertSourceColorsToggle" class="control-label">Invert Colors</label>
                 <input type="checkbox" id="invertSourceColorsToggle" class="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" style="accent-color: #0C76FE; vertical-align: middle;" />
+            </div>
+            <div>
+                <label for="videoBitrateSlider" class="control-label">Video Bitrate (<span id="videoBitrateValue">5</span> Mbps)</label>
+                <input type="range" id="videoBitrateSlider" min="1" max="50" value="5" step="1" class="slider w-full">
             </div>
             
             <div class="sm:col-span-1">
-                <label class="control-label">Cor de Fundo</label>
+                <label class="control-label">Background Color</label>
                 <div id="bgColorPickerContainer" class="picker-group"></div>
             </div>
             <div class="sm:col-span-1">
-                <label class="control-label">Cor da Forma</label>
+                <label class="control-label">Shape Color</label>
                 <div id="shapeColorPickerContainer" class="picker-group"></div>
             </div>
             
-            <div id="videoTrimControls" class="sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-2 hidden flex-col">
+            <div id="videoTrimControls" class="sm:col-span-2 md:col-span-3 lg:col-span-3 xl:col-span-2 hidden flex-col">
                 <div class="flex items-end gap-2 w-full">
                     <div>
-                        <label for="videoStartTimeInput" class="control-label">Início (s)</label>
+                        <label for="videoStartTimeInput" class="control-label">Start (s)</label>
                         <input type="number" id="videoStartTimeInput" value="0" min="0" step="0.1" class="form-input-styled">
                     </div>
                     <div>
-                        <label for="videoEndTimeInput" class="control-label">Fim (s)</label>
+                        <label for="videoEndTimeInput" class="control-label">End (s)</label>
                         <input type="number" id="videoEndTimeInput" value="5" min="0.1" step="0.1" class="form-input-styled">
                     </div>
-                    <div class="text-xs text-slate-500 self-center pb-1 whitespace-nowrap" id="selectedDurationDisplay">Duração: 5.0s</div>
+                    <div class="text-xs text-slate-500 self-center pb-1 whitespace-nowrap" id="selectedDurationDisplay">Duration: 5.0s</div>
                 </div>
                 <div id="trimTimelineContainer" class="trim-timeline-container">
                     <div id="trimTimelineSelection" class="trim-timeline-selection"></div>
@@ -194,34 +208,46 @@
             </div>
         </div>
 
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <div class="flex flex-col items-center">
-                <label class="control-label mb-2 text-center">Preview do Vídeo Fonte (frame atual)</label>
-                <div class="h-72 md:h-auto md:min-h-[200px] w-full md:aspect-[16/9] border-2 border-dashed border-slate-300 rounded-lg p-2 text-center cursor-pointer hover:border-sky-500 transition-colors bg-slate-50 flex items-center justify-center" id="dropZone">
+            {/* Coluna da Esquerda: Upload */}
+            <div class="flex flex-col items-center space-y-2">
+                <label class="control-label text-center">1. Upload Your Video</label>
+                <div class="w-full border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-sky-500 transition-colors bg-slate-50 flex items-center justify-center" id="dropZone" style="min-height: 200px;">
                     <input type="file" id="videoUploadInput" class="hidden" accept="video/*"> 
-                    <div id="dropZoneContent">
+                    <div id="dropZoneContent"> 
                         <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p class="mt-2 text-sm text-slate-600"><span class="font-semibold text-sky-600">Clique para carregar</span> ou arraste e solte o vídeo</p>
-                        <p class="text-xs text-slate-500">Arquivo de Vídeo (MP4, WebM)</p>
+                        <p class="mt-2 text-sm text-slate-600"><span class="font-semibold text-sky-600">Click to upload</span> or drag & drop video</p>
+                        <p class="text-xs text-slate-500">Video File (MP4, WebM)</p>
                     </div>
-                    <canvas id="sourcePreviewCanvas" class="canvas-preview hidden"></canvas>
                 </div>
             </div>
 
-            <div class="flex flex-col items-center">
-                <label class="control-label mb-2 text-center">Preview do Padrão Gerado</label>
-                <div id="outputPatternCanvasContainer" class="canvas-container h-72 md:h-auto md:min-h-[200px] w-full md:aspect-[16/9]">
-                    <canvas id="outputPatternCanvas" class="canvas-preview"></canvas>
+            {/* Coluna da Direita: Previews e Padrão Gerado */}
+            <div class="flex flex-col items-center space-y-4">
+                <div id="framePreviewsContainer" class="w-full grid grid-cols-2 gap-4 hidden">
+                    <div class="preview-canvas-wrapper">
+                        <label class="control-label text-xs text-center block mb-1">Start Frame</label>
+                        <canvas id="sourcePreviewCanvas" class="canvas-preview frame-preview-canvas"></canvas>
+                    </div>
+                    <div class="preview-canvas-wrapper">
+                         <label class="control-label text-xs text-center block mb-1">End Frame</label>
+                         <canvas id="endFramePreviewCanvas" class="canvas-preview frame-preview-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="w-full">
+                    <label class="control-label mb-2 text-center">Generated Pattern Preview (from Start Frame)</label>
+                    <div id="outputPatternCanvasContainer" class="canvas-container">
+                        <canvas id="outputPatternCanvas" class="canvas-preview"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="mt-6 md:mt-8 text-center">
             <button id="processVideoButton" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                Gerar Padrão de Vídeo
+                Generate Video Pattern
             </button>
         </div>
         <video id="sourceVideoElement" style="display: none;" playsinline muted></video>
@@ -238,8 +264,8 @@
         ];
         const PREVIEW_CANVAS_MAX_DIM = 500; 
         const TARGET_FPS = 30; 
-        const MAX_PROCESSING_DURATION = 10; // Segundos
-        const VIDEO_BITRATE = 5000000; // Ex: 5 Mbps para tentar melhor qualidade
+        const MAX_PROCESSING_DURATION = 30; 
+        let VIDEO_BITRATE = 5000000; 
 
         // --- Elementos DOM ---
         const patternDensitySlider = document.getElementById('patternDensitySlider');
@@ -253,6 +279,8 @@
         const maxShapeScaleSlider = document.getElementById('maxShapeScaleSlider');
         const maxShapeScaleValueDisplay = document.getElementById('maxShapeScaleValue');
         const invertSourceColorsToggle = document.getElementById('invertSourceColorsToggle');
+        const videoBitrateSlider = document.getElementById('videoBitrateSlider'); 
+        const videoBitrateValueDisplay = document.getElementById('videoBitrateValue'); 
         
         const bgColorPickerContainer = document.getElementById('bgColorPickerContainer');
         const shapeColorPickerContainer = document.getElementById('shapeColorPickerContainer');
@@ -261,3 +289,696 @@
         const dropZone = document.getElementById('dropZone');
         const dropZoneContent = document.getElementById('dropZoneContent');
         
+        const framePreviewsContainer = document.getElementById('framePreviewsContainer'); 
+        const sourcePreviewCanvas = document.getElementById('sourcePreviewCanvas'); 
+        const sourcePreviewCtx = sourcePreviewCanvas.getContext('2d');
+        const endFramePreviewCanvas = document.getElementById('endFramePreviewCanvas'); 
+        const endFramePreviewCtx = endFramePreviewCanvas.getContext('2d'); 
+        const outputPatternCanvasContainer = document.getElementById('outputPatternCanvasContainer'); 
+        const outputPatternCanvas = document.getElementById('outputPatternCanvas'); 
+        const outputPatternCtx = outputPatternCanvas.getContext('2d');
+        
+        const processVideoButton = document.getElementById('processVideoButton');
+        const sourceVideoElement = document.getElementById('sourceVideoElement'); 
+        const videoTrimControls = document.getElementById('videoTrimControls'); 
+        const videoStartTimeInput = document.getElementById('videoStartTimeInput'); 
+        const videoEndTimeInput = document.getElementById('videoEndTimeInput'); 
+        const selectedDurationDisplay = document.getElementById('selectedDurationDisplay'); 
+        const trimTimelineContainer = document.getElementById('trimTimelineContainer'); 
+        const trimTimelineSelection = document.getElementById('trimTimelineSelection'); 
+        const progressContainer = document.getElementById('progressContainer'); 
+        const progressText = document.getElementById('progressText'); 
+        const progressBarFill = document.getElementById('progressBarFill'); 
+
+
+        let currentVideoFile = null;
+        let videoAspectRatio = 16 / 9; 
+        let videoOriginalDuration = 0;
+        let offscreenFrameCanvas = document.createElement('canvas'); 
+        let offscreenFrameCtx = offscreenFrameCanvas.getContext('2d');
+        
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recordingCanvas; 
+        let recordingCtx;
+        let isProcessingVideo = false;
+        let seekTarget = null; 
+
+        // --- DEFINIÇÃO DAS FUNÇÕES AUXILIARES E DE LÓGICA ---
+        function calculateCanvasDimensions(maxDim, aspectRatio) {
+            let canvasWidth, canvasHeight;
+            if (!aspectRatio || isNaN(aspectRatio)) aspectRatio = 16/9; 
+
+            if (aspectRatio >= 1) { 
+                canvasWidth = maxDim;
+                canvasHeight = maxDim / aspectRatio;
+            } else { 
+                canvasHeight = maxDim;
+                canvasWidth = maxDim * aspectRatio;
+            }
+            return { width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
+        }
+
+        function setupInitialCanvas(canvas, maxDim, aspectRatio, isPlaceholder = false, placeholderText = "Preview") {
+            const { width, height } = calculateCanvasDimensions(maxDim, aspectRatio);
+            canvas.width = width;
+            canvas.height = height;
+            
+            if (canvas === outputPatternCanvas) {
+                 outputPatternCanvasContainer.style.setProperty('--output-aspect-ratio', `${aspectRatio}`);
+            }
+            
+            if (isPlaceholder) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#F9FAFB"; 
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = "#9CA3AF"; 
+                ctx.font = `${Math.min(14, width / 15)}px Inter`; 
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(placeholderText, width / 2, height / 2);
+            }
+        }
+        
+        function createRadioOptionBase(container, name, optionData, isChecked, isColorOption) {
+            const radioId = `${name}_${isColorOption ? optionData.hex.replace('#', '') : optionData.value}`;
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio'; radioInput.id = radioId; radioInput.name = name;
+            radioInput.value = isColorOption ? optionData.hex : optionData.value;
+            radioInput.className = 'radio-input';
+            if (isChecked) radioInput.checked = true;
+            
+            if (name === 'backgroundColor' || name === 'shapeColor') {
+                radioInput.addEventListener('change', generatePatternForCurrentFrame);
+            }
+
+            const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = radioId;
+            radioLabel.className = 'radio-label';
+            
+            let labelContent = '';
+            if (isColorOption) {
+                labelContent = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
+            } else {
+                radioLabel.classList.add('has-text'); 
+                labelContent = `<span class="picker-name">${optionData.name}</span>`;
+            }
+            radioLabel.innerHTML = labelContent;
+            
+            container.appendChild(radioInput); container.appendChild(radioLabel);
+        }
+
+        function createColorRadioOption(container, name, colorData, isChecked) {
+            createRadioOptionBase(container, name, colorData, isChecked, true);
+        }
+        
+        function enforceMinMaxScaleLogic() {
+            let minVal = parseFloat(minShapeScaleSlider.value);
+            let maxVal = parseFloat(maxShapeScaleSlider.value);
+            if (minVal > maxVal) {
+                if (this === minShapeScaleSlider) maxShapeScaleSlider.value = minVal;
+                else minShapeScaleSlider.value = maxVal;
+            }
+            updateSliderValueDisplays(); 
+        }
+
+        function updateProcessButtonState() {
+            const start = parseFloat(videoStartTimeInput.value) || 0;
+            const end = parseFloat(videoEndTimeInput.value) || 0;
+            const duration = Math.max(0, end - start);
+            let trimIsValid = !(duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0);
+
+            processVideoButton.disabled = !currentVideoFile || !sourceVideoElement.src || sourceVideoElement.readyState < 2 || isProcessingVideo || !trimIsValid;
+            if (isProcessingVideo) {
+                processVideoButton.textContent = "Processing...";
+            } else {
+                processVideoButton.textContent = "Generate Video Pattern";
+            }
+        }
+        
+        function updateSelectedDurationDisplay() {
+            console.log("Updating selected duration display");
+            try {
+                const start = parseFloat(videoStartTimeInput.value) || 0;
+                const end = parseFloat(videoEndTimeInput.value) || 0;
+                const duration = Math.max(0, end - start);
+                selectedDurationDisplay.textContent = `Duration: ${duration.toFixed(1)}s`;
+                
+                let isValid = true;
+                if (duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0) {
+                    selectedDurationDisplay.classList.add('text-red-500');
+                    isValid = false;
+                } else {
+                    selectedDurationDisplay.classList.remove('text-red-500');
+                }
+                updateTrimTimelineVisual();
+                updateProcessButtonState(); 
+            } catch (error) {
+                console.error("Error in updateSelectedDurationDisplay:", error);
+            }
+        }
+
+        function updateTrimTimelineVisual() {
+            console.log("Updating trim timeline visual");
+            try {
+                if (!currentVideoFile || videoOriginalDuration === 0) {
+                    trimTimelineSelection.style.width = '0%';
+                    trimTimelineSelection.style.left = '0%';
+                    return;
+                }
+                const start = parseFloat(videoStartTimeInput.value) || 0;
+                const end = parseFloat(videoEndTimeInput.value) || 0;
+
+                const startPercent = (start / videoOriginalDuration) * 100;
+                const endPercent = (end / videoOriginalDuration) * 100;
+                const widthPercent = Math.max(0, endPercent - startPercent);
+
+                trimTimelineSelection.style.left = `${Math.max(0, Math.min(100, startPercent))}%`;
+                trimTimelineSelection.style.width = `${Math.max(0, Math.min(100, widthPercent))}%`;
+            } catch (error) {
+                console.error("Error in updateTrimTimelineVisual:", error);
+            }
+        }
+        
+        async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) {
+            if (!sourceVideoElement.src || sourceVideoElement.readyState < 1) { 
+                 console.warn(`seekAndDrawPreview called too early for ${targetCanvas.id}. Video not ready.`);
+                 const placeholderText = targetCanvas === sourcePreviewCanvas ? "Start Frame" : "End Frame";
+                 setupInitialCanvas(targetCanvas, 150, videoAspectRatio, true, placeholderText); // Redesenha placeholder
+                 return;
+            }
+            console.log(`Seeking to ${time} for ${targetCanvas.id}`);
+            
+            return new Promise((resolve, reject) => {
+                const onSeeked = () => {
+                    console.log(`Seeked to ${sourceVideoElement.currentTime} for ${targetCanvas.id}`);
+                    sourceVideoElement.removeEventListener('seeked', onSeeked);
+                    sourceVideoElement.removeEventListener('error', onSeekError); 
+                    
+                    const previewAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
+                    const maxDimForThisPreview = 150; 
+
+                    const {width: previewWidth, height: previewHeight} = calculateCanvasDimensions(
+                        maxDimForThisPreview, 
+                        previewAspectRatio
+                    );
+                    targetCanvas.width = previewWidth;
+                    targetCanvas.height = previewHeight;
+                    targetCtx.drawImage(sourceVideoElement, 0, 0, targetCanvas.width, targetCanvas.height);
+                    
+                    if (isMainPatternPreviewSource) { 
+                        offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
+                        offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+                        offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
+                        generatePatternForCurrentFrame(); 
+                    }
+                    resolve();
+                };
+                const onSeekError = (e) => {
+                     console.error("Error during seek for preview:", e);
+                     sourceVideoElement.removeEventListener('seeked', onSeeked);
+                     sourceVideoElement.removeEventListener('error', onSeekError);
+                     reject(e);
+                };
+
+                sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
+                sourceVideoElement.addEventListener('error', onSeekError, { once: true });
+                sourceVideoElement.currentTime = Math.max(0, Math.min(time, videoOriginalDuration));
+            });
+        }
+
+        function updateSliderValueDisplays() {
+            patternDensityValueDisplay.textContent = patternDensitySlider.value;
+            randomnessValueDisplay.textContent = parseFloat(randomnessSlider.value).toFixed(2);
+            brightnessThresholdValueDisplay.textContent = brightnessThresholdSlider.value;
+            minShapeScaleValueDisplay.textContent = parseFloat(minShapeScaleSlider.value).toFixed(2);
+            maxShapeScaleValueDisplay.textContent = parseFloat(maxShapeScaleSlider.value).toFixed(2);
+            videoBitrateValueDisplay.textContent = videoBitrateSlider.value; 
+        }
+
+        function handleVideoUpload(event) { 
+            console.log("handleVideoUpload called");
+            try {
+                if (event.target.files && event.target.files[0]) {
+                    console.log("File selected:", event.target.files[0].name);
+                    loadVideoFromFile(event.target.files[0]);
+                } else {
+                    console.log("No file selected or event target issue");
+                }
+            } catch (error) {
+                console.error("Error in handleVideoUpload:", error);
+            }
+        }
+
+        function loadVideoFromFile(file) { 
+            console.log("loadVideoFromFile called for:", file.name);
+            try {
+                resetVideoState(); 
+                currentVideoFile = file;
+                const objectURL = URL.createObjectURL(currentVideoFile);
+                sourceVideoElement.src = objectURL;
+                console.log("Video source set to object URL:", objectURL);
+
+                sourceVideoElement.onloadedmetadata = async () => {
+                    console.log("Video metadata loaded. Duration:", sourceVideoElement.duration);
+                    try {
+                        videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
+                        videoOriginalDuration = sourceVideoElement.duration;
+                        
+                        setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern (from Start Frame)");
+
+
+                        videoStartTimeInput.max = videoOriginalDuration.toFixed(1); 
+                        videoEndTimeInput.max = videoOriginalDuration.toFixed(1);
+                        
+                        let initialEndTime = Math.min(MAX_PROCESSING_DURATION, videoOriginalDuration); 
+                        initialEndTime = Math.max(0.1, initialEndTime); 
+                        videoStartTimeInput.value = "0.0";
+                        videoEndTimeInput.value = initialEndTime.toFixed(1);
+                        
+                        updateSelectedDurationDisplay(); 
+                        videoTrimControls.classList.remove('hidden');
+                        framePreviewsContainer.classList.remove('hidden'); 
+                        dropZoneContent.classList.add('hidden'); 
+
+                        seekTarget = 'start';
+                        await seekAndDrawPreview(parseFloat(videoStartTimeInput.value), sourcePreviewCanvas, sourcePreviewCtx, true); 
+                        seekTarget = 'end';
+                        await seekAndDrawPreview(parseFloat(videoEndTimeInput.value), endFramePreviewCanvas, endFramePreviewCtx);
+                        updateProcessButtonState();
+                        console.log("Initial previews drawn.");
+                    } catch (e) {
+                        console.error("Error in onloadedmetadata drawing previews:", e);
+                    }
+                };
+
+                sourceVideoElement.onseeked = () => { 
+                    console.log("Global onseeked, target:", seekTarget, "currentTime:", sourceVideoElement.currentTime);
+                    if (isProcessingVideo && seekTarget === 'process') { 
+                        processCurrentFrameForVideo();
+                    }
+                    // A lógica de atualização de preview de IN/OUT é tratada dentro de seekAndDrawPreview
+                };
+                sourceVideoElement.onerror = (e) => { 
+                    console.error("Error loading video element:", e, sourceVideoElement.error);
+                    URL.revokeObjectURL(objectURL); 
+                    alert("Error loading video. Check console for details."); resetVideoState(); 
+                };
+            } catch (error) {
+                console.error("Error in loadVideoFromFile:", error);
+            }
+        }
+        
+        function resetVideoState() { 
+            console.log("Resetting video state");
+            try {
+                if (sourceVideoElement.src && sourceVideoElement.src.startsWith('blob:')) { 
+                    URL.revokeObjectURL(sourceVideoElement.src);
+                }
+                sourceVideoElement.removeAttribute('src'); 
+                sourceVideoElement.onloadedmetadata = null; 
+                sourceVideoElement.onseeked = null;
+                sourceVideoElement.onerror = null;
+
+                currentVideoFile = null;
+                videoAspectRatio = 16/9; 
+                videoOriginalDuration = 0;
+                
+                dropZoneContent.classList.remove('hidden'); 
+                framePreviewsContainer.classList.add('hidden'); 
+
+                setupInitialCanvas(sourcePreviewCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Start Frame");
+                setupInitialCanvas(endFramePreviewCanvas, PREVIEW_CANVAS_MAX_DIM / 2, videoAspectRatio, true, "End Frame");
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+
+                videoTrimControls.classList.add('hidden');
+                progressContainer.classList.add('hidden'); 
+                progressBarFill.style.width = '0%';
+                progressBarFill.textContent = '0%';
+                
+                updateProcessButtonState();
+                updateTrimTimelineVisual();
+                isProcessingVideo = false;
+            } catch (error) {
+                console.error("Error in resetVideoState:", error);
+            }
+        }
+        
+        function getSelectedRadioValue(radioGroupName) {
+            const selectedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+            return selectedRadio ? selectedRadio.value : null;
+        }
+        
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x); 
+        }
+
+        function generatePatternForCurrentFrame() {
+            if (!currentVideoFile || !offscreenFrameCanvas.width || sourceVideoElement.readyState < 2 ) { 
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+                return;
+            }
+            // offscreenFrameCanvas deve ter o frame correto (do IN point ou do seek atual)
+            // desenhado por seekAndDrawPreview ou pelo loop de processamento
+            generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx, PREVIEW_CANVAS_MAX_DIM, offscreenFrameCanvas);
+        }
+        
+        function generatePatternOnCanvas(targetCanvas, targetCtx, targetMaxDimOrWidth, sourceCanvasForSampling, targetHeightOptional) {
+            const density = parseInt(patternDensitySlider.value);
+            const randomnessThreshold = parseFloat(randomnessSlider.value); 
+            const brightnessThresholdVal = parseInt(brightnessThresholdSlider.value); 
+            const minScaleVal = parseFloat(minShapeScaleSlider.value); 
+            const maxScaleVal = parseFloat(maxShapeScaleSlider.value); 
+            const invertColors = invertSourceColorsToggle.checked;
+            
+            const bgColor = getSelectedRadioValue('backgroundColor') || BRAND_COLORS[0].hex;
+            const shapeColor = getSelectedRadioValue('shapeColor') || BRAND_COLORS[1].hex;
+
+            let canvasWidth, canvasHeight;
+            if (targetHeightOptional !== undefined) { 
+                canvasWidth = targetMaxDimOrWidth;
+                canvasHeight = targetHeightOptional;
+            } else { 
+                const sourceAspectRatio = sourceCanvasForSampling.width / sourceCanvasForSampling.height;
+                 ({ width: canvasWidth, height: canvasHeight } = calculateCanvasDimensions(targetMaxDimOrWidth, sourceAspectRatio));
+            }
+            
+            targetCanvas.width = canvasWidth;
+            targetCanvas.height = canvasHeight;
+             if (targetCanvas === outputPatternCanvas) { 
+                 outputPatternCanvasContainer.style.setProperty('--output-aspect-ratio', `${canvasWidth / canvasHeight}`);
+            }
+
+            targetCtx.fillStyle = bgColor;
+            targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            if (!sourceCanvasForSampling || !sourceCanvasForSampling.width || !sourceCanvasForSampling.height) {
+                targetCtx.fillStyle = "#999";
+                targetCtx.font = `${Math.min(16, canvasWidth / 20)}px Inter`;
+                targetCtx.textAlign = "center";
+                targetCtx.fillText("Pattern Preview", canvasWidth / 2, canvasHeight / 2);
+                return;
+            }
+            
+            const sourceCtxToSampleFrom = sourceCanvasForSampling.getContext('2d'); 
+            const sourceWidthForSampling = sourceCanvasForSampling.width;
+            const sourceHeightForSampling = sourceCanvasForSampling.height;
+
+            const numCellsX = density;
+            const cellSize = canvasWidth / numCellsX; 
+            const numCellsY = Math.round(canvasHeight / cellSize);
+
+            for (let yCell = 0; yCell < numCellsY; yCell++) {
+                for (let xCell = 0; xCell < numCellsX; xCell++) {
+                    const sourceNormX = (xCell + 0.5) / numCellsX;
+                    const sourceNormY = (yCell + 0.5) / numCellsY; 
+                    const sampleX = Math.floor(sourceNormX * sourceWidthForSampling);
+                    const sampleY = Math.floor(sourceNormY * sourceHeightForSampling);
+                    
+                    const clampedSourceX = Math.min(Math.max(0, sampleX), sourceWidthForSampling - 1);
+                    const clampedSourceY = Math.min(Math.max(0, sampleY), sourceHeightForSampling - 1);
+                    
+                    const pixelData = sourceCtxToSampleFrom.getImageData(clampedSourceX, clampedSourceY, 1, 1).data;
+                    let r = pixelData[0], g = pixelData[1], b = pixelData[2];
+                    
+                    if (invertColors) {
+                        r = 255 - r; g = 255 - g; b = 255 - b;
+                    }
+                    const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b; 
+
+                    if (brightness < brightnessThresholdVal) { 
+                        targetCtx.fillStyle = shapeColor;
+                        
+                        const cellSeed = yCell * numCellsX + xCell; 
+                        const cellRandomValue = seededRandom(cellSeed);
+                        let drawCircle = cellRandomValue < randomnessThreshold; 
+
+                        const brightnessFactor = Math.max(0, (brightnessThresholdVal - brightness)) / brightnessThresholdVal;
+                        const actualMinScale = Math.min(minScaleVal, maxScaleVal); 
+                        const actualMaxScale = Math.max(minScaleVal, maxScaleVal); 
+                        const currentShapeScaleRatio = actualMinScale + brightnessFactor * (actualMaxScale - actualMinScale);
+                        
+                        const actualShapeSize = cellSize * currentShapeScaleRatio;
+                        const drawX = xCell * cellSize + (cellSize - actualShapeSize) / 2;
+                        const drawY = yCell * cellSize + (cellSize - actualShapeSize) / 2;
+
+                        if (drawCircle) {
+                            targetCtx.beginPath();
+                            targetCtx.arc(drawX + actualShapeSize / 2, drawY + actualShapeSize / 2, actualShapeSize / 2, 0, 2 * Math.PI);
+                            targetCtx.fill();
+                        } else {
+                            targetCtx.fillRect(drawX, drawY, actualShapeSize, actualShapeSize);
+                        }
+                    }
+                }
+            }
+        }
+        
+        let currentFrameProcessing = 0;
+        let totalFramesToProcessForVideo = 0;
+        let currentVideoTime = 0;
+        let videoTimeIncrement = 0;
+        let durationToProcessForVideo = 0;
+        let videoStartTime = 0; 
+
+        function startVideoProcessing() {
+            if (!currentVideoFile || sourceVideoElement.readyState < 2 || isProcessingVideo) {
+                alert("Please upload a video or wait for current processing to finish.");
+                return;
+            }
+
+            videoStartTime = parseFloat(videoStartTimeInput.value);
+            const videoEndTime = parseFloat(videoEndTimeInput.value);
+            durationToProcessForVideo = videoEndTime - videoStartTime;
+
+            if (durationToProcessForVideo <= 0 || durationToProcessForVideo > MAX_PROCESSING_DURATION || videoStartTime >= videoEndTime || videoEndTime > videoOriginalDuration || videoStartTime < 0) {
+                alert(`Invalid trim selection. Duration must be > 0 and <= ${MAX_PROCESSING_DURATION}s, and within video limits.`);
+                updateSelectedDurationDisplay(); 
+                return;
+            }
+
+            isProcessingVideo = true;
+            updateProcessButtonState();
+            progressContainer.classList.remove('hidden'); 
+            progressBarFill.style.width = '0%';
+            progressBarFill.textContent = '0%';
+            progressText.textContent = "Starting processing...";
+
+            totalFramesToProcessForVideo = Math.floor(durationToProcessForVideo * TARGET_FPS);
+            currentFrameProcessing = 0;
+            currentVideoTime = videoStartTime; 
+            videoTimeIncrement = 1 / TARGET_FPS;
+
+            recordingCanvas.width = sourceVideoElement.videoWidth;
+            recordingCanvas.height = sourceVideoElement.videoHeight;
+
+            VIDEO_BITRATE = parseInt(videoBitrateSlider.value) * 1000000; 
+
+            const stream = recordingCanvas.captureStream(TARGET_FPS);
+            const options = { 
+                mimeType: 'video/webm;codecs=vp9',
+                videoBitsPerSecond: VIDEO_BITRATE 
+            };
+            try {
+                 mediaRecorder = new MediaRecorder(stream, options);
+            } catch (e) {
+                console.warn("Failed to set bitrate, trying without:", e);
+                try { 
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+                } catch (e2) {
+                    console.error("Error creating MediaRecorder (fallback):", e2);
+                    alert("Error starting recording: format/codec not supported by browser.");
+                    isProcessingVideo = false;
+                    updateProcessButtonState();
+                    progressText.textContent = "Failed to start recording.";
+                    return;
+                }
+            }
+           
+            recordedChunks = [];
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const videoURL = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = videoURL;
+                const fileNameStartTime = videoStartTime.toFixed(1).replace('.', '_');
+                const fileNameEndTime = videoEndTime.toFixed(1).replace('.', '_');
+                link.download = `pattern_video_${currentVideoFile.name.split('.')[0]}_${fileNameStartTime}s_to_${fileNameEndTime}s.webm`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(videoURL);
+
+                progressText.textContent = "Video generated and download started!";
+                isProcessingVideo = false;
+                updateProcessButtonState();
+            };
+
+            mediaRecorder.start();
+            seekTarget = 'process'; 
+            sourceVideoElement.currentTime = currentVideoTime; 
+        }
+        
+        function processCurrentFrameForVideo() {
+            const videoEndTime = videoStartTime + durationToProcessForVideo;
+            if (!isProcessingVideo || currentVideoTime >= videoEndTime - (videoTimeIncrement / 2) || currentFrameProcessing >= totalFramesToProcessForVideo) {
+                 if (mediaRecorder.state === "recording") mediaRecorder.stop();
+                return;
+            }
+            
+            offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
+            offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+            offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
+
+            generatePatternOnCanvas(recordingCanvas, recordingCtx, sourceVideoElement.videoWidth, offscreenFrameCanvas, sourceVideoElement.videoHeight);
+            generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx, PREVIEW_CANVAS_MAX_DIM, offscreenFrameCanvas);
+
+            currentFrameProcessing++;
+            const progressPercent = totalFramesToProcessForVideo > 0 ? Math.round((currentFrameProcessing / totalFramesToProcessForVideo) * 100) : 0;
+            progressBarFill.style.width = `${progressPercent}%`;
+            progressBarFill.textContent = `${progressPercent}%`;
+            progressText.textContent = `Processing frame ${currentFrameProcessing} of ${totalFramesToProcessForVideo}...`;
+            
+            currentVideoTime += videoTimeIncrement;
+
+            if (currentVideoTime < videoEndTime && currentFrameProcessing < totalFramesToProcessForVideo) {
+                setTimeout(() => {
+                    if(isProcessingVideo) {
+                        seekTarget = 'process'; 
+                        sourceVideoElement.currentTime = currentVideoTime;
+                    }
+                }, Math.max(10, (1000 / TARGET_FPS) - 20)); 
+            } else {
+                if (mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                }
+            }
+        }
+        
+        // --- Função de Inicialização Principal ---
+        function addEventListeners() {
+            console.log("Adding event listeners");
+            try {
+                const sliders = [
+                    patternDensitySlider, randomnessSlider, brightnessThresholdSlider,
+                    minShapeScaleSlider, maxShapeScaleSlider, invertSourceColorsToggle, videoBitrateSlider
+                ];
+                sliders.forEach(slider => slider.addEventListener('input', () => {
+                    if (slider !== minShapeScaleSlider && slider !== maxShapeScaleSlider) {
+                        updateSliderValueDisplays();
+                    } else {
+                         enforceMinMaxScaleLogic.call(slider);
+                    }
+                     if (slider === videoBitrateSlider) { 
+                        updateSliderValueDisplays();
+                    }
+                    generatePatternForCurrentFrame();
+                }));
+                
+                dropZone.addEventListener('click', () => {
+                    console.log("Drop zone clicked");
+                    videoUploadInput.click();
+                });
+                videoUploadInput.addEventListener('change', handleVideoUpload); 
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+                dropZone.addEventListener('drop', (e) => {
+                    console.log("Video dropped");
+                    e.preventDefault(); dropZone.classList.remove('drag-over');
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        videoUploadInput.files = e.dataTransfer.files; 
+                        handleVideoUpload({target: videoUploadInput}); 
+                    }
+                });
+                processVideoButton.addEventListener('click', startVideoProcessing);
+
+                videoStartTimeInput.addEventListener('input', () => { 
+                    console.log("Start time input changed");
+                    let start = parseFloat(videoStartTimeInput.value);
+                    let end = parseFloat(videoEndTimeInput.value);
+                    start = Math.max(0, Math.min(start, videoOriginalDuration)); 
+                    videoStartTimeInput.value = start; 
+                    if (end - start > MAX_PROCESSING_DURATION) {
+                        end = start + MAX_PROCESSING_DURATION;
+                        videoEndTimeInput.value = Math.min(end, videoOriginalDuration).toFixed(1);
+                    }
+                    if (start >= end && videoOriginalDuration > 0) {
+                        end = Math.min(videoOriginalDuration, start + 0.1); 
+                        videoEndTimeInput.value = end.toFixed(1);
+                    }
+                    updateSelectedDurationDisplay();
+                    if (sourceVideoElement.readyState >= 2 && !isProcessingVideo) { 
+                        seekTarget = 'start';
+                        seekAndDrawPreview(parseFloat(videoStartTimeInput.value), sourcePreviewCanvas, sourcePreviewCtx, true);
+                    }
+                });
+                 videoStartTimeInput.addEventListener('change', () => { 
+                    videoStartTimeInput.value = parseFloat(videoStartTimeInput.value).toFixed(1);
+                    updateSelectedDurationDisplay();
+                 });
+
+                videoEndTimeInput.addEventListener('input', () => { 
+                    console.log("End time input changed");
+                    let start = parseFloat(videoStartTimeInput.value);
+                    let end = parseFloat(videoEndTimeInput.value);
+                    end = Math.max(0, Math.min(end, videoOriginalDuration));
+                    videoEndTimeInput.value = end; 
+                    if (end - start > MAX_PROCESSING_DURATION) {
+                        start = end - MAX_PROCESSING_DURATION;
+                        videoStartTimeInput.value = Math.max(0, start).toFixed(1);
+                    }
+                    if (start >= end && end > 0) {
+                        start = Math.max(0, end - 0.1); 
+                        videoStartTimeInput.value = start.toFixed(1);
+                    }
+                     if (start < 0) videoStartTimeInput.value = "0.0";
+
+                    updateSelectedDurationDisplay();
+                     if (sourceVideoElement.readyState >= 2 && !isProcessingVideo) {
+                        seekTarget = 'end';
+                        seekAndDrawPreview(parseFloat(videoEndTimeInput.value), endFramePreviewCanvas, endFramePreviewCtx);
+                    }
+                });
+                videoEndTimeInput.addEventListener('change', () => { 
+                    videoEndTimeInput.value = parseFloat(videoEndTimeInput.value).toFixed(1);
+                    updateSelectedDurationDisplay();
+                 });
+            } catch (error) {
+                 console.error("Error in addEventListeners:", error);
+            }
+        }
+
+        function initialize() {
+            console.log("Initializing App");
+            BRAND_COLORS.forEach((color, index) => {
+                createColorRadioOption(bgColorPickerContainer, 'backgroundColor', color, index === 0); 
+                createColorRadioOption(shapeColorPickerContainer, 'shapeColor', color, index === 1); 
+            });
+            
+            setupInitialCanvas(sourcePreviewCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Start Frame");
+            setupInitialCanvas(endFramePreviewCanvas, PREVIEW_CANVAS_MAX_DIM / 2, videoAspectRatio, true, "End Frame");
+            setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "Pattern Preview");
+
+            // Esconde o container de previews de IN/OUT inicialmente, mostra o dropZoneContent
+            framePreviewsContainer.classList.add('hidden'); 
+            dropZoneContent.classList.remove('hidden'); 
+
+
+            recordingCanvas = document.createElement('canvas');
+            recordingCtx = recordingCanvas.getContext('2d');
+
+            addEventListeners(); 
+            updateSliderValueDisplays(); 
+            updateProcessButtonState();
+            updateTrimTimelineVisual(); 
+        }
+
+        initialize(); 
+    </script>
+</body>
+</html>
