@@ -79,15 +79,6 @@
             align-items: center; 
         }
         /* CSS para esconder os radio buttons mas manter acessibilidade */
-        #videoRangeSlider
-        .noUi-handle {
-        background: #000;
-        border: 2px solid #fff;
-        box-shadow: 0 1px 6px 0 rgba(0,0,0,0.10);
-        top: -4px;
-        width: 16px;
-        height: 16px;
-        }
         .picker-group input[type="radio"] {
             opacity: 0;
             position: absolute;
@@ -121,6 +112,7 @@
             border-radius: 4px;
             border: none;
             box-shadow: none;
+            margin: 0 8px; /* Adiciona margem para as alças não cortarem nas bordas */
         }
         #videoRangeSlider .noUi-connect {
             background: #000000; /* Cor da barra de conexão (seleção) */
@@ -130,7 +122,7 @@
             height: 16px; /* Altura da alça */
             width: 16px; /* Largura da alça */
             top: -4px; /* Ajuste vertical para centralizar na barra */
-            right: -8px; /* Ajuste horizontal */
+            right: -8px; /* Ajuste horizontal padrão, pode ser -width/2 */
             border-radius: 50%;
             background: #000000; /* Cor da alça */
             border: 2px solid white;
@@ -287,7 +279,7 @@
                 
                 <div id="videoTrimControls" class="hidden flex-col pt-4">
                     <label class="control-label text-xs mb-1">IN / OUT</label>
-                    <div id="videoRangeSlider" class="mb-2" style="margin: 0 10px;"></div> 
+                    <div id="videoRangeSlider" class="mb-2"></div> 
                     <div class="flex justify-between text-xs text-slate-600 mt-1">
                         <div>IN: <span id="rangeInValue">0.0</span>s</div>
                         <div id="selectedDurationDisplay" class="font-semibold">0 FRAMES (0.0 SECONDS)</div>
@@ -385,9 +377,9 @@
         const processVideoButton = document.getElementById('processVideoButton');
         const sourceVideoElement = document.getElementById('sourceVideoElement'); 
         const videoTrimControls = document.getElementById('videoTrimControls'); 
-        const videoRangeSlider = document.getElementById('videoRangeSlider'); // Novo
-        const rangeInValue = document.getElementById('rangeInValue'); // Novo
-        const rangeOutValue = document.getElementById('rangeOutValue'); // Novo
+        const videoRangeSlider = document.getElementById('videoRangeSlider'); 
+        const rangeInValue = document.getElementById('rangeInValue'); 
+        const rangeOutValue = document.getElementById('rangeOutValue'); 
         const selectedDurationDisplay = document.getElementById('selectedDurationDisplay'); 
         
         const progressContainer = document.getElementById('progressContainer'); 
@@ -408,15 +400,84 @@
         let seekTarget = null; 
 
         // --- DEFINIÇÃO DAS FUNÇÕES AUXILIARES E DE LÓGICA ---
-        function calculateCanvasDimensions(maxDim, aspectRatio) { /* ... (como antes) ... */ }
-        function setupInitialCanvas(canvas, maxDim, aspectRatio, isPlaceholder = false, placeholderText = "Preview") { /* ... (como antes, com placeholders atualizados) ... */ }
-        function createRadioOptionBase(container, name, optionData, isChecked, isColorOption) { /* ... (como antes) ... */ }
-        function createColorRadioOption(container, name, colorData, isChecked) { /* ... (como antes) ... */ }
-        function enforceMinMaxScaleLogic() { /* ... (como antes) ... */ }
+        function calculateCanvasDimensions(maxDim, aspectRatio) {
+            let canvasWidth, canvasHeight;
+            if (!aspectRatio || isNaN(aspectRatio)) aspectRatio = 16/9; 
+            if (aspectRatio >= 1) { 
+                canvasWidth = maxDim; canvasHeight = maxDim / aspectRatio;
+            } else { 
+                canvasHeight = maxDim; canvasWidth = maxDim * aspectRatio;
+            }
+            return { width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
+        }
+
+        function setupInitialCanvas(canvas, maxDim, aspectRatio, isPlaceholder = false, placeholderText = "Preview") {
+            const { width, height } = calculateCanvasDimensions(maxDim, aspectRatio);
+            canvas.width = width;
+            canvas.height = height;
+            
+            if (canvas === outputPatternCanvas) {
+                 outputPatternCanvasContainer.style.setProperty('--output-aspect-ratio', `${aspectRatio}`);
+            }
+            
+            if (isPlaceholder) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#f0f2f5"; 
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = "#6b7280"; 
+                ctx.font = `bold ${Math.min(12, width / 15)}px 'Roboto Mono', monospace`; 
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(placeholderText, width / 2, height / 2);
+            }
+        }
+        
+        function createRadioOptionBase(container, name, optionData, isChecked, isColorOption) {
+            const radioId = `${name}_${isColorOption ? optionData.hex.replace('#', '') : optionData.value}`;
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio'; radioInput.id = radioId; radioInput.name = name;
+            radioInput.value = isColorOption ? optionData.hex : optionData.value;
+            radioInput.className = 'radio-input'; // Classe para esconder o input
+            if (isChecked) radioInput.checked = true;
+            
+            if (name === 'backgroundColor' || name === 'shapeColor') {
+                radioInput.addEventListener('change', generatePatternForCurrentFrame);
+            }
+
+            const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = radioId;
+            radioLabel.className = 'radio-label color-radio'; // Classe para o label/swatch
+            
+            let labelContent = '';
+            if (isColorOption) {
+                labelContent = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
+            } else { 
+                // Não usado para resolução nesta versão, mas mantido para flexibilidade
+                // radioLabel.classList.add('has-text'); 
+                // labelContent = `<span class="picker-name">${optionData.name}</span>`;
+            }
+            radioLabel.innerHTML = labelContent;
+            
+            container.appendChild(radioInput); container.appendChild(radioLabel);
+        }
+
+        function createColorRadioOption(container, name, colorData, isChecked) {
+            createRadioOptionBase(container, name, colorData, isChecked, true);
+        }
+        
+        function enforceMinMaxScaleLogic() {
+            let minVal = parseFloat(minShapeScaleSlider.value);
+            let maxVal = parseFloat(maxShapeScaleSlider.value);
+            if (minVal > maxVal) {
+                if (this === minShapeScaleSlider) maxShapeScaleSlider.value = minVal;
+                else minShapeScaleSlider.value = maxVal;
+            }
+            updateSliderValueDisplays(); 
+        }
         
         function getRangeValues() {
-            if (!videoRangeSlider.noUiSlider) return [0, 0];
-            return videoRangeSlider.noUiSlider.get().map(parseFloat);
+            if (!videoRangeSlider.noUiSlider) return [0, 0]; // Retorna default se slider não inicializado
+            return videoRangeSlider.noUiSlider.get().map(v => parseFloat(v));
         }
 
         function updateProcessButtonState() {
@@ -445,58 +506,112 @@
                 } else {
                     selectedDurationDisplay.classList.remove('text-red-500');
                 }
-                // updateTrimTimelineVisual(); // A timeline visual agora é o próprio noUiSlider
+                // updateTrimTimelineVisual(); // O noUiSlider já atualiza a barra visual
                 updateProcessButtonState(); 
             } catch (error) {
                 console.error("Error in updateSelectedDurationDisplay:", error);
             }
         }
-
-        // updateTrimTimelineVisual não é mais necessária, o noUiSlider faz isso.
         
-        async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) { /* ... (como antes) ... */ }
+        async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) {
+            if (!sourceVideoElement.src || sourceVideoElement.readyState < 1) { 
+                 const placeholderText = targetCanvas === sourcePreviewCanvas ? "START" : "END";
+                 setupInitialCanvas(targetCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, placeholderText); 
+                 return;
+            }
+            
+            return new Promise((resolve, reject) => {
+                const onSeeked = () => {
+                    sourceVideoElement.removeEventListener('seeked', onSeeked);
+                    sourceVideoElement.removeEventListener('error', onSeekError); 
+                    
+                    const previewAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
+                    const {width: previewWidth, height: previewHeight} = calculateCanvasDimensions(
+                        SUB_PREVIEW_MAX_DIM, 
+                        previewAspectRatio
+                    );
+                    targetCanvas.width = previewWidth;
+                    targetCanvas.height = previewHeight;
+                    targetCtx.drawImage(sourceVideoElement, 0, 0, targetCanvas.width, targetCanvas.height);
+                    
+                    if (isMainPatternPreviewSource) { 
+                        offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
+                        offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+                        offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
+                        generatePatternForCurrentFrame(); 
+                    }
+                    resolve();
+                };
+                const onSeekError = (e) => {
+                     console.error("Error during seek for preview:", e);
+                     sourceVideoElement.removeEventListener('seeked', onSeeked);
+                     sourceVideoElement.removeEventListener('error', onSeekError);
+                     reject(e);
+                };
 
-        function updateSliderValueDisplays() { /* ... (como antes, incluindo bitrate) ... */ }
-        function handleVideoUpload(event) { /* ... (como antes) ... */ }
+                sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
+                sourceVideoElement.addEventListener('error', onSeekError, { once: true });
+                sourceVideoElement.currentTime = Math.max(0, Math.min(time, videoOriginalDuration));
+            });
+        }
 
+        function updateSliderValueDisplays() {
+            patternDensityValueDisplay.textContent = `(${patternDensitySlider.value})`;
+            randomnessValueDisplay.textContent = `(${parseFloat(randomnessSlider.value).toFixed(2)})`;
+            brightnessThresholdValueDisplay.textContent = `(${brightnessThresholdSlider.value})`;
+            minShapeScaleValueDisplay.textContent = `(${parseFloat(minShapeScaleSlider.value).toFixed(2)})`;
+            maxShapeScaleValueDisplay.textContent = `(${parseFloat(maxShapeScaleSlider.value).toFixed(2)})`;
+            videoBitrateValueDisplay.textContent = `(${videoBitrateSlider.value} Mbps)`; 
+        }
+
+        function handleVideoUpload(event) { 
+            try {
+                if (event.target.files && event.target.files[0]) {
+                    loadVideoFromFile(event.target.files[0]);
+                }
+            } catch (error) {
+                console.error("Error in handleVideoUpload:", error);
+            }
+        }
+        
         function initializeRangeSlider(videoDuration) {
             const initialEnd = Math.min(MAX_PROCESSING_DURATION, videoDuration);
             if (videoRangeSlider.noUiSlider) {
                 videoRangeSlider.noUiSlider.destroy();
             }
             noUiSlider.create(videoRangeSlider, {
-                start: [0, initialEnd],
-                connect: true, // Mostra a barra entre as alças
-                step: 0.1,    // Precisão de 100ms
+                start: [0, initialEnd > 0.1 ? initialEnd : 0.1], // Garante que end > start
+                connect: true, 
+                step: 0.1,    
                 range: {
                     'min': 0,
-                    'max': videoDuration
+                    'max': videoDuration > 0 ? videoDuration : 1 // Evita max 0
                 },
-                tooltips: [ // Mostra tooltips nas alças
+                tooltips: [ 
                     { to: value => parseFloat(value).toFixed(1) + 's' },
                     { to: value => parseFloat(value).toFixed(1) + 's' }
                 ],
-                format: { // Formato para os valores internos e tooltips
+                format: { 
                     to: value => parseFloat(value).toFixed(1),
                     from: value => parseFloat(value)
                 },
-                // Limitar a distância máxima entre as alças
                 limit: MAX_PROCESSING_DURATION, 
-                // margin: 0.1 // Opcional: distância mínima entre alças
+                margin: 0.1 // Distância mínima entre alças
             });
 
-            videoRangeSlider.noUiSlider.on('update', async function (values, handle) {
+            videoRangeSlider.noUiSlider.on('update', async function (values, handle) { // 'handle' indica qual alça foi movida (0 ou 1)
                 const startTime = parseFloat(values[0]);
                 const endTime = parseFloat(values[1]);
 
                 rangeInValue.textContent = startTime.toFixed(1);
                 rangeOutValue.textContent = endTime.toFixed(1);
-                updateSelectedDurationDisplay(); // Atualiza o display de duração e valida
+                updateSelectedDurationDisplay(); 
                 
-                if (handle === 0) { // Alça de início movida
+                // Atualiza o preview do frame correspondente à alça movida
+                if (handle === 0) { 
                     seekTarget = 'start';
-                    await seekAndDrawPreview(startTime, sourcePreviewCanvas, sourcePreviewCtx, true);
-                } else if (handle === 1) { // Alça de fim movida
+                    await seekAndDrawPreview(startTime, sourcePreviewCanvas, sourcePreviewCtx, true); // true para atualizar padrão principal
+                } else if (handle === 1) { 
                     seekTarget = 'end';
                     await seekAndDrawPreview(endTime, endFramePreviewCanvas, endFramePreviewCtx);
                 }
@@ -521,11 +636,10 @@
                         
                         setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
                         
-                        initializeRangeSlider(videoOriginalDuration); // Inicializa o noUiSlider
-                        // Os valores iniciais do slider já chamarão o update e o seekAndDrawPreview
+                        initializeRangeSlider(videoOriginalDuration); 
                         
                         videoTrimControls.classList.remove('hidden');
-                        updateProcessButtonState(); // Habilita botão se o trim inicial for válido
+                        updateProcessButtonState(); 
                     } catch (e) {
                         console.error("Error in onloadedmetadata drawing previews:", e);
                     }
@@ -536,7 +650,11 @@
                         processCurrentFrameForVideo();
                     }
                 };
-                sourceVideoElement.onerror = (e) => { /* ... (como antes) ... */ };
+                sourceVideoElement.onerror = (e) => { 
+                    console.error("Error loading video element:", e, sourceVideoElement.error);
+                    URL.revokeObjectURL(objectURL); 
+                    alert("Error loading video. Check console for details."); resetVideoState(); 
+                };
             } catch (error) {
                 console.error("Error in loadVideoFromFile:", error);
             }
@@ -544,19 +662,171 @@
         
         function resetVideoState() { 
             try {
-                // ... (reset existente) ...
-                if (videoRangeSlider.noUiSlider) {
-                    videoRangeSlider.noUiSlider.destroy(); // Destrói o slider ao resetar
+                if (sourceVideoElement.src && sourceVideoElement.src.startsWith('blob:')) { 
+                    URL.revokeObjectURL(sourceVideoElement.src);
+                }
+                sourceVideoElement.removeAttribute('src'); 
+                sourceVideoElement.onloadedmetadata = null; 
+                sourceVideoElement.onseeked = null;
+                sourceVideoElement.onerror = null;
+
+                currentVideoFile = null;
+                videoAspectRatio = 16/9; 
+                videoOriginalDuration = 0;
+                
+                dropZone.classList.remove('hidden'); 
+                framePreviewsContainer.classList.add('hidden'); 
+
+                setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "START");
+                setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "END");
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
+
+                if (videoRangeSlider.noUiSlider) { // Destrói o slider se existir
+                    videoRangeSlider.noUiSlider.destroy();
                 }
                 videoTrimControls.classList.add('hidden');
-                // ... (resto do reset)
+                progressContainer.classList.add('hidden'); 
+                progressBarFill.style.width = '0%';
+                progressBarFill.textContent = '0%';
+                
+                updateProcessButtonState();
+                // updateTrimTimelineVisual(); // Não mais necessário
+                isProcessingVideo = false;
             } catch (error) {
                 console.error("Error in resetVideoState:", error);
             }
         }
         
-        // ... (getSelectedRadioValue, seededRandom, generatePatternForCurrentFrame, generatePatternOnCanvas) ...
+        function getSelectedRadioValue(radioGroupName) {
+            const selectedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+            return selectedRadio ? selectedRadio.value : null;
+        }
         
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x); 
+        }
+
+        function generatePatternForCurrentFrame() {
+            if (!currentVideoFile || !offscreenFrameCanvas.width || sourceVideoElement.readyState < 2 ) { 
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "GENERATED PATTERN PREVIEW");
+                return;
+            }
+            // Garante que o offscreenFrameCanvas tenha o frame do ponto de INÍCIO para o preview do padrão
+            if (sourceVideoElement.readyState >=2 && videoRangeSlider.noUiSlider) {
+                const [startTime] = getRangeValues();
+                if (sourceVideoElement.currentTime.toFixed(1) !== startTime.toFixed(1)) { // Evita redraw desnecessário se já estiver no frame
+                    // Este seek pode ser um pouco lento para preview em tempo real dos sliders.
+                    // Uma otimização seria não fazer seek aqui e só usar o último frame desenhado no offscreenFrameCanvas
+                    // que foi atualizado pelo seekAndDrawPreview do Start Handle.
+                    // Por simplicidade, vamos manter o seek para garantir que o padrão é do frame de início.
+                    // sourceVideoElement.currentTime = startTime; // Isso dispararia onseeked, que chamaria generatePatternForCurrentFrame novamente.
+                    // Melhor desenhar diretamente se o offscreenFrameCanvas já tem o frame correto.
+                }
+            }
+             // offscreenFrameCanvas é atualizado por seekAndDrawPreview(startTime, ..., true)
+            generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx, PREVIEW_CANVAS_MAX_DIM, offscreenFrameCanvas);
+        }
+        
+        function generatePatternOnCanvas(targetCanvas, targetCtx, targetMaxDimOrWidth, sourceCanvasForSampling, targetHeightOptional) {
+            const density = parseInt(patternDensitySlider.value);
+            const randomnessThreshold = parseFloat(randomnessSlider.value); 
+            const brightnessThresholdVal = parseInt(brightnessThresholdSlider.value); 
+            const minScaleVal = parseFloat(minShapeScaleSlider.value); 
+            const maxScaleVal = parseFloat(maxShapeScaleSlider.value); 
+            const invertColors = invertSourceColorsToggle.checked;
+            
+            const bgColor = getSelectedRadioValue('backgroundColor') || BRAND_COLORS[0].hex;
+            const shapeColor = getSelectedRadioValue('shapeColor') || BRAND_COLORS[1].hex;
+
+            let canvasWidth, canvasHeight;
+            if (targetHeightOptional !== undefined) { 
+                canvasWidth = targetMaxDimOrWidth;
+                canvasHeight = targetHeightOptional;
+            } else { 
+                const sourceAspectRatio = sourceCanvasForSampling.width / sourceCanvasForSampling.height;
+                 ({ width: canvasWidth, height: canvasHeight } = calculateCanvasDimensions(targetMaxDimOrWidth, sourceAspectRatio));
+            }
+            
+            targetCanvas.width = canvasWidth;
+            targetCanvas.height = canvasHeight;
+             if (targetCanvas === outputPatternCanvas) { 
+                 outputPatternCanvasContainer.style.setProperty('--output-aspect-ratio', `${canvasWidth / canvasHeight}`);
+            }
+
+            targetCtx.fillStyle = bgColor;
+            targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            if (!sourceCanvasForSampling || !sourceCanvasForSampling.width || !sourceCanvasForSampling.height) {
+                targetCtx.fillStyle = "#999";
+                targetCtx.font = `bold ${Math.min(12, canvasWidth / 18)}px 'Roboto Mono', monospace`;
+                targetCtx.textAlign = "center";
+                targetCtx.textBaseline = "middle";
+                targetCtx.fillText("GENERATED PATTERN PREVIEW", canvasWidth / 2, canvasHeight / 2);
+                return;
+            }
+            
+            const sourceCtxToSampleFrom = sourceCanvasForSampling.getContext('2d'); 
+            const sourceWidthForSampling = sourceCanvasForSampling.width;
+            const sourceHeightForSampling = sourceCanvasForSampling.height;
+
+            const numCellsX = density;
+            const cellSize = canvasWidth / numCellsX; 
+            const numCellsY = Math.round(canvasHeight / cellSize);
+
+            for (let yCell = 0; yCell < numCellsY; yCell++) {
+                for (let xCell = 0; xCell < numCellsX; xCell++) {
+                    const sourceNormX = (xCell + 0.5) / numCellsX;
+                    const sourceNormY = (yCell + 0.5) / numCellsY; 
+                    const sampleX = Math.floor(sourceNormX * sourceWidthForSampling);
+                    const sampleY = Math.floor(sourceNormY * sourceHeightForSampling);
+                    
+                    const clampedSourceX = Math.min(Math.max(0, sampleX), sourceWidthForSampling - 1);
+                    const clampedSourceY = Math.min(Math.max(0, sampleY), sourceHeightForSampling - 1);
+                    
+                    const pixelData = sourceCtxToSampleFrom.getImageData(clampedSourceX, clampedSourceY, 1, 1).data;
+                    let r = pixelData[0], g = pixelData[1], b = pixelData[2];
+                    
+                    if (invertColors) {
+                        r = 255 - r; g = 255 - g; b = 255 - b;
+                    }
+                    const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b; 
+
+                    if (brightness < brightnessThresholdVal) { 
+                        targetCtx.fillStyle = shapeColor;
+                        
+                        const cellSeed = yCell * numCellsX + xCell; 
+                        const cellRandomValue = seededRandom(cellSeed);
+                        let drawCircle = cellRandomValue < randomnessThreshold; 
+
+                        const brightnessFactor = Math.max(0, (brightnessThresholdVal - brightness)) / brightnessThresholdVal;
+                        const actualMinScale = Math.min(minScaleVal, maxScaleVal); 
+                        const actualMaxScale = Math.max(minScaleVal, maxScaleVal); 
+                        const currentShapeScaleRatio = actualMinScale + brightnessFactor * (actualMaxScale - actualMinScale);
+                        
+                        const actualShapeSize = cellSize * currentShapeScaleRatio;
+                        const drawX = xCell * cellSize + (cellSize - actualShapeSize) / 2;
+                        const drawY = yCell * cellSize + (cellSize - actualShapeSize) / 2;
+
+                        if (drawCircle) {
+                            targetCtx.beginPath();
+                            targetCtx.arc(drawX + actualShapeSize / 2, drawY + actualShapeSize / 2, actualShapeSize / 2, 0, 2 * Math.PI);
+                            targetCtx.fill();
+                        } else {
+                            targetCtx.fillRect(drawX, drawY, actualShapeSize, actualShapeSize);
+                        }
+                    }
+                }
+            }
+        }
+        
+        let currentFrameProcessing = 0;
+        let totalFramesToProcessForVideo = 0;
+        let currentVideoTime = 0;
+        let videoTimeIncrement = 0;
+        let durationToProcessForVideo = 0;
+        let videoStartTime = 0; 
+
         function startVideoProcessing() {
             if (!currentVideoFile || sourceVideoElement.readyState < 2 || isProcessingVideo) {
                 alert("Please upload a video or wait for current processing to finish.");
@@ -574,10 +844,108 @@
 
             isProcessingVideo = true;
             videoStartTime = startTime; // Define a variável global para o loop
-            // ... (resto da função startVideoProcessing como antes, usando videoStartTime e durationToProcessForVideo) ...
+            updateProcessButtonState();
+            progressContainer.classList.remove('hidden'); 
+            progressBarFill.style.width = '0%';
+            progressBarFill.textContent = '0%';
+            progressText.textContent = "Starting processing...";
+
+            totalFramesToProcessForVideo = Math.floor(durationToProcessForVideo * TARGET_FPS);
+            currentFrameProcessing = 0;
+            currentVideoTime = videoStartTime; 
+            videoTimeIncrement = 1 / TARGET_FPS;
+
+            recordingCanvas.width = sourceVideoElement.videoWidth;
+            recordingCanvas.height = sourceVideoElement.videoHeight;
+
+            VIDEO_BITRATE = parseInt(videoBitrateSlider.value) * 1000000; 
+
+            const stream = recordingCanvas.captureStream(TARGET_FPS);
+            const options = { 
+                mimeType: 'video/webm;codecs=vp9',
+                videoBitsPerSecond: VIDEO_BITRATE 
+            };
+            try {
+                 mediaRecorder = new MediaRecorder(stream, options);
+            } catch (e) {
+                console.warn("Failed to set bitrate, trying without:", e);
+                try { 
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+                } catch (e2) {
+                    console.error("Error creating MediaRecorder (fallback):", e2);
+                    alert("Error starting recording: format/codec not supported by browser.");
+                    isProcessingVideo = false;
+                    updateProcessButtonState();
+                    progressText.textContent = "Failed to start recording.";
+                    return;
+                }
+            }
+           
+            recordedChunks = [];
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const videoURL = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = videoURL;
+                const fileNameStartTime = videoStartTime.toFixed(1).replace('.', '_');
+                const fileNameEndTime = endTime.toFixed(1).replace('.', '_'); // Usa endTime do escopo de startVideoProcessing
+                link.download = `pattern_video_${currentVideoFile.name.split('.')[0]}_${fileNameStartTime}s_to_${fileNameEndTime}s.webm`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(videoURL);
+
+                progressText.textContent = "Video generated and download started!";
+                isProcessingVideo = false;
+                updateProcessButtonState();
+            };
+
+            mediaRecorder.start();
+            seekTarget = 'process'; 
+            sourceVideoElement.currentTime = currentVideoTime; 
         }
         
-        // ... (processCurrentFrameForVideo) ...
+        function processCurrentFrameForVideo() {
+            const [sTime, eTime] = getRangeValues(); // Pega os valores atuais do slider
+            const videoEndTimeForLoop = eTime; // Usa o valor atualizado do slider
+
+            if (!isProcessingVideo || currentVideoTime >= videoEndTimeForLoop - (videoTimeIncrement / 2) || currentFrameProcessing >= totalFramesToProcessForVideo) {
+                 if (mediaRecorder.state === "recording") mediaRecorder.stop();
+                return;
+            }
+            
+            offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
+            offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+            offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
+
+            generatePatternOnCanvas(recordingCanvas, recordingCtx, sourceVideoElement.videoWidth, offscreenFrameCanvas, sourceVideoElement.videoHeight);
+            generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx, PREVIEW_CANVAS_MAX_DIM, offscreenFrameCanvas);
+
+            currentFrameProcessing++;
+            const progressPercent = totalFramesToProcessForVideo > 0 ? Math.round((currentFrameProcessing / totalFramesToProcessForVideo) * 100) : 0;
+            progressBarFill.style.width = `${progressPercent}%`;
+            progressBarFill.textContent = `${progressPercent}%`;
+            progressText.textContent = `Processing frame ${currentFrameProcessing} of ${totalFramesToProcessForVideo}...`;
+            
+            currentVideoTime += videoTimeIncrement;
+
+            if (currentVideoTime < videoEndTimeForLoop && currentFrameProcessing < totalFramesToProcessForVideo) {
+                setTimeout(() => {
+                    if(isProcessingVideo) {
+                        seekTarget = 'process'; 
+                        sourceVideoElement.currentTime = currentVideoTime;
+                    }
+                }, Math.max(10, (1000 / TARGET_FPS) - 20)); 
+            } else {
+                if (mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                }
+            }
+        }
         
         // --- Função de Inicialização Principal ---
         function addEventListeners() {
@@ -615,8 +983,8 @@
                 });
                 processVideoButton.addEventListener('click', startVideoProcessing);
 
-                // Event listeners para os inputs numéricos de trim são removidos,
-                // pois o noUiSlider agora controla esses valores e dispara seu próprio evento 'update'.
+                // Event listeners para os inputs numéricos de trim foram removidos
+                // A lógica de atualização agora é feita pelo noUiSlider
 
             } catch (error) {
                  console.error("Error in addEventListeners:", error);
@@ -643,7 +1011,7 @@
             addEventListeners(); 
             updateSliderValueDisplays(); 
             updateProcessButtonState();
-            // updateTrimTimelineVisual(); // Não é mais necessário, noUiSlider cuida disso visualmente
+            // updateTrimTimelineVisual(); // noUiSlider cuida da sua própria representação visual
         }
 
         initialize(); 
