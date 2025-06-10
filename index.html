@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
     <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
     <style>
+        /* General body and container styling */
         body {
             font-family: 'Roboto Mono', monospace;
             overscroll-behavior: none;
@@ -20,8 +21,12 @@
             margin: 1rem auto;
             max-width: 900px; 
         }
+
+        /* Header styling */
         .header-title { color: #000000; font-weight: 600; } 
         .header-subtitle { color: #6b7280; font-size: 0.875rem; }
+
+        /* Button styling */
         .upload-button {
             background-color: #1f2937; 
             color: white;
@@ -36,6 +41,7 @@
         .upload-button:hover { background-color: #374151; }
         .upload-button:disabled { background-color: #9ca3af; cursor: not-allowed;}
         
+        /* Control group and slider styling */
         .control-group label.control-label {
             font-weight: 500; 
             margin-bottom: 0.75rem; 
@@ -48,7 +54,7 @@
         .control-group .slider-value-label {
             font-size: 0.75rem; color: #4b5563; 
         }
-        .slider { /* Estilo para sliders nativos */
+        .slider {
             -webkit-appearance: none; width: 100%; height: 4px; 
             border-radius: 2px; background: #d1d5db; 
             outline: none;
@@ -65,6 +71,7 @@
             background: #000000; cursor: pointer; border: none;
         }
         
+        /* Color picker styling */
         .colors-section { margin-top: 1.5rem; }
         .color-picker-label {
             font-weight: 500; font-size: 0.75rem; color: #000000;
@@ -72,10 +79,10 @@
             margin-right: 0.75rem; 
         }
         .picker-group {
-            display: flex; flex-wrap: nowrap; gap: 0.25rem; 
+            /* MODIFIED: Changed flex-wrap to wrap to allow color swatches to go to the next line */
+            display: flex; flex-wrap: wrap; gap: 0.25rem; 
             align-items: center; 
         }
-        /* CSS para esconder os radio buttons mas manter acessibilidade */
         .picker-group input[type="radio"] {
             opacity: 0;
             position: absolute;
@@ -101,27 +108,27 @@
             border: 1px solid rgba(0,0,0,0.1); 
         }
         
+        /* Video trimming controls styling */
         #videoTrimControls { margin-top: 2rem; }
-        /* Estilos para noUiSlider */
         #videoRangeSlider {
-            height: 8px; /* Altura da barra principal do slider */
-            background: #e5e7eb; /* Cor de fundo da barra */
+            height: 8px;
+            background: #e5e7eb;
             border-radius: 4px;
             border: none;
             box-shadow: none;
-            margin: 0 8px; /* Adiciona margem para as alças não cortarem nas bordas */
+            margin: 0 8px;
         }
         #videoRangeSlider .noUi-connect {
-            background: #000000; /* Cor da barra de conexão (seleção) */
+            background: #000000;
             border-radius: 4px;
         }
         #videoRangeSlider .noUi-handle {
-            height: 16px; /* Altura da alça */
-            width: 16px; /* Largura da alça */
-            top: -4px; /* Ajuste vertical para centralizar na barra */
-            right: -8px; /* Ajuste horizontal padrão, pode ser -width/2 */
+            height: 16px;
+            width: 16px;
+            top: -4px;
+            right: -8px;
             border-radius: 50%;
-            background: #000000; /* Cor da alça */
+            background: #000000;
             border: 2px solid white;
             box-shadow: none;
             cursor: grab;
@@ -131,7 +138,7 @@
         #videoRangeSlider .noUi-tooltip {
             display: block;
             position: absolute;
-            bottom: 120%; /* Posiciona acima da alça */
+            bottom: 120%;
             transform: translateX(-50%);
             left: 50%;
             background: #333;
@@ -142,6 +149,8 @@
             white-space: nowrap;
             border: none;
         }
+
+        /* Canvas and preview styling */
         .frame-info-text { font-size: 0.75rem; color: #4b5563; text-align: center; margin-top: 0.5rem;}
         .preview-column {
             display: flex;
@@ -161,12 +170,6 @@
             width: 100%; 
             aspect-ratio: var(--output-aspect-ratio, 16 / 9);
         }
-        .sub-preview-canvas-container { 
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            width: 100%;
-        }
         .sub-preview-canvas { 
              width: 100%;
              aspect-ratio: var(--source-aspect-ratio, 16 / 9);
@@ -180,6 +183,8 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
+        /* Generate button and progress bar styling */
         .generate-button {
             background-color: #000000; 
             color: white;
@@ -206,7 +211,8 @@
             display: flex; align-items: center; justify-content: center;
             color: white; font-size: 0.625rem; 
         }
-        /* NEW: Styles for analysis mode controls */
+
+        /* Styling for new analysis mode controls */
         .select-input {
             width: 100%;
             padding: 0.3rem 0.5rem;
@@ -259,7 +265,8 @@
                         <label for="randomnessSlider" class="control-label">SHAPE MIX <span id="randomnessValue" class="slider-value-label">(0.50)</span></label>
                         <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
                     </div>
-                     <div class="control-group">
+                    <!-- Analysis Mode Dropdown -->
+                    <div class="control-group">
                         <label for="analysisModeSelect" class="control-label">Analysis Mode</label>
                         <select id="analysisModeSelect" class="select-input">
                             <option value="luminance" selected>Luma Sensitivity</option>
@@ -281,6 +288,7 @@
                         <input type="range" id="videoBitrateSlider" min="1" max="50" value="25" step="1" class="slider w-full">
                     </div>
                    
+                    <!-- Sliders for different analysis modes -->
                     <div id="luminanceControl" class="control-group">
                         <label for="brightnessThresholdSlider" class="control-label">LUMA SENSITIVITY <span id="brightnessThresholdValue" class="slider-value-label">(120)</span></label>
                         <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="120" class="slider w-full">
@@ -295,18 +303,23 @@
                     </div>
                 </div>
 
+                <!-- MODIFIED: Restructured color controls section -->
                 <div class="colors-section pt-2">
                     <span class="group-label">COLORS</span>
-                    <div class="flex items-center justify-start space-x-6 mt-2">
-                        <div class="flex items-center">
-                            <span class="color-picker-label mr-2">SHAPE</span>
-                            <div id="shapeColorPickerContainer" class="picker-group"></div>
+                    <div class="flex items-start justify-between mt-2">
+                        <!-- Left column for pickers -->
+                        <div class="flex flex-col space-y-3">
+                            <div class="flex items-center">
+                                <span class="color-picker-label mr-2">SHAPE</span>
+                                <div id="shapeColorPickerContainer" class="picker-group"></div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="color-picker-label mr-2">BACKGROUND</span>
+                                <div id="bgColorPickerContainer" class="picker-group"></div>
+                            </div>
                         </div>
-                        <div class="flex items-center">
-                            <span class="color-picker-label mr-2">BACKGROUND</span>
-                            <div id="bgColorPickerContainer" class="picker-group"></div>
-                        </div>
-                        <div class="flex items-center ml-auto">
+                        <!-- Right side for invert toggle -->
+                        <div class="flex items-center pt-2">
                             <label for="invertSourceColorsToggle" class="control-label text-xs whitespace-nowrap mr-2">INVERT</label>
                             <input type="checkbox" id="invertSourceColorsToggle" class="h-4 w-4 text-black border-gray-400 rounded focus:ring-black" style="accent-color: #000000;" />
                         </div>
@@ -372,7 +385,6 @@
             { name: "Sky Blue", hex: "#BEDAE2" }, { name: "Orchid", hex: "#E57DE1" },
             { name: "Maroon", hex: "#65211A" }
         ];
-        // NEW: Generate grayscale colors
         const GRAYSCALE_COLORS = Array.from({ length: 11 }, (_, i) => {
             const percentage = i * 10;
             const hexValue = Math.round(255 - (percentage / 100) * 255).toString(16).padStart(2, '0');
@@ -384,7 +396,7 @@
         const SUB_PREVIEW_MAX_DIM = 200; 
         const TARGET_FPS = 30; 
         const MAX_PROCESSING_DURATION = 30; 
-        let VIDEO_BITRATE = 25000000; // MODIFIED: Default bitrate
+        let VIDEO_BITRATE = 25000000;
 
         // --- DOM Elements ---
         const patternDensitySlider = document.getElementById('patternDensitySlider');
@@ -401,7 +413,6 @@
         const videoBitrateSlider = document.getElementById('videoBitrateSlider'); 
         const videoBitrateValueDisplay = document.getElementById('videoBitrateValue'); 
         
-        // NEW: Analysis mode elements
         const analysisModeSelect = document.getElementById('analysisModeSelect');
         const luminanceControl = document.getElementById('luminanceControl');
         const colorMatchControl = document.getElementById('colorMatchControl');
@@ -415,7 +426,6 @@
         const videoUploadInput = document.getElementById('videoUploadInput');
         const uploadButtonTrigger = document.getElementById('uploadButtonTrigger'); 
         const dropZone = document.getElementById('dropZone');
-        const dropZoneContent = document.getElementById('dropZoneContent');
         
         const framePreviewsContainer = document.getElementById('framePreviewsContainer'); 
         const sourcePreviewCanvas = document.getElementById('sourcePreviewCanvas'); 
@@ -442,7 +452,7 @@
         let videoAspectRatio = 16 / 9; 
         let videoOriginalDuration = 0;
         let offscreenFrameCanvas = document.createElement('canvas'); 
-        let offscreenFrameCtx = offscreenFrameCanvas.getContext('2d', { willReadFrequently: true }); // NEW: willReadFrequently for performance
+        let offscreenFrameCtx = offscreenFrameCanvas.getContext('2d', { willReadFrequently: true });
         
         let mediaRecorder;
         let recordedChunks = [];
@@ -450,6 +460,13 @@
         let seeking = false;
 
         // --- Helper and Logic Functions ---
+
+        /**
+         * Calculates canvas dimensions based on a maximum dimension and aspect ratio.
+         * @param {number} maxDim - The maximum width or height of the canvas.
+         * @param {number} aspectRatio - The aspect ratio (width / height).
+         * @returns {{width: number, height: number}} The calculated dimensions.
+         */
         function calculateCanvasDimensions(maxDim, aspectRatio) {
             let canvasWidth, canvasHeight;
             if (!aspectRatio || isNaN(aspectRatio)) aspectRatio = 16/9; 
@@ -461,6 +478,14 @@
             return { width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
         }
 
+        /**
+         * Sets up the initial state of a canvas, including size and an optional placeholder.
+         * @param {HTMLCanvasElement} canvas - The canvas element to set up.
+         * @param {number} maxDim - The maximum dimension for the canvas.
+         * @param {number} aspectRatio - The aspect ratio for the canvas.
+         * @param {boolean} [isPlaceholder=false] - Whether to draw a placeholder.
+         * @param {string} [placeholderText="Preview"] - Text for the placeholder.
+         */
         function setupInitialCanvas(canvas, maxDim, aspectRatio, isPlaceholder = false, placeholderText = "Preview") {
             const { width, height } = calculateCanvasDimensions(maxDim, aspectRatio);
             canvas.width = width;
@@ -484,46 +509,57 @@
             }
         }
         
+        /**
+         * Creates a styled radio button option, typically for color selection.
+         * @param {HTMLElement} container - The container for the radio button.
+         * @param {string} name - The name attribute for the radio group.
+         * @param {object} optionData - Data for the option (e.g., {hex: '#...', name: '...'}).
+         * @param {boolean} isChecked - Whether the option should be checked by default.
+         * @param {boolean} isColorOption - True if this is a color swatch.
+         */
         function createRadioOptionBase(container, name, optionData, isChecked, isColorOption) {
             const radioId = `${name}_${isColorOption ? optionData.hex.replace('#', '') : optionData.value}`;
             const radioInput = document.createElement('input');
             radioInput.type = 'radio'; radioInput.id = radioId; radioInput.name = name;
             radioInput.value = isColorOption ? optionData.hex : optionData.value;
-            radioInput.className = 'radio-input'; // Class to hide the input
+            radioInput.className = 'radio-input';
             if (isChecked) radioInput.checked = true;
             
             radioInput.addEventListener('change', generatePatternForCurrentFrame);
 
             const radioLabel = document.createElement('label');
             radioLabel.htmlFor = radioId;
-            radioLabel.className = 'radio-label color-radio'; // Class for the label/swatch
+            radioLabel.className = 'radio-label color-radio';
             
-            let labelContent = '';
             if (isColorOption) {
-                labelContent = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
+                radioLabel.innerHTML = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
             }
-            radioLabel.innerHTML = labelContent;
             
-            container.appendChild(radioInput); container.appendChild(radioLabel);
+            container.appendChild(radioInput); 
+            container.appendChild(radioLabel);
         }
 
         function createColorRadioOption(container, name, colorData, isChecked) {
             createRadioOptionBase(container, name, colorData, isChecked, true);
         }
 
-        // NEW: Populate color pickers with brand and grayscale colors
+        /**
+         * Populates the color picker containers with brand and grayscale colors.
+         */
         function populateColorPickers() {
             bgColorPickerContainer.innerHTML = '';
             shapeColorPickerContainer.innerHTML = '';
             const allColors = [...GRAYSCALE_COLORS, ...BRAND_COLORS];
 
-            allColors.forEach((color, index) => {
-                // Default background to white, shape to black
+            allColors.forEach((color) => {
                 createColorRadioOption(bgColorPickerContainer, 'backgroundColor', color, color.hex === '#FFFFFF');
                 createColorRadioOption(shapeColorPickerContainer, 'shapeColor', color, color.hex === '#0F0F0F');
             });
         }
         
+        /**
+         * Ensures that the min shape size is never greater than the max shape size.
+         */
         function enforceMinMaxScaleLogic() {
             let minVal = parseFloat(minShapeScaleSlider.value);
             let maxVal = parseFloat(maxShapeScaleSlider.value);
@@ -535,11 +571,18 @@
             generatePatternForCurrentFrame();
         }
         
+        /**
+         * Gets the current start and end times from the trim slider.
+         * @returns {number[]} An array containing [startTime, endTime].
+         */
         function getRangeValues() {
             if (!videoRangeSlider.noUiSlider) return [0, 0];
             return videoRangeSlider.noUiSlider.get().map(v => parseFloat(v));
         }
 
+        /**
+         * Updates the state of the "Generate" button based on app state.
+         */
         function updateProcessButtonState() {
             const [start, end] = getRangeValues();
             const duration = Math.max(0, end - start);
@@ -549,6 +592,9 @@
             processVideoButton.textContent = isProcessingVideo ? "PROCESSING..." : "GENERATE";
         }
         
+        /**
+         * Updates the text display for the selected video duration.
+         */
         function updateSelectedDurationDisplay() {
             try {
                 const [start, end] = getRangeValues();
@@ -566,8 +612,17 @@
             }
         }
         
+        /**
+         * Seeks the video to a specific time and draws a preview frame on a canvas.
+         * @param {number} time - The time to seek to in seconds.
+         * @param {HTMLCanvasElement} targetCanvas - The canvas to draw the preview on.
+         * @param {CanvasRenderingContext2D} targetCtx - The context of the target canvas.
+         * @param {boolean} [isMainPatternPreviewSource=false] - If true, also updates the main pattern preview.
+         * @returns {Promise<void>} A promise that resolves when the frame is drawn.
+         */
         async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) {
-             if (!sourceVideoElement.src || sourceVideoElement.readyState < 1 || seeking) {
+             // MODIFIED: Changed readyState check from < 1 to < 2 for more stability.
+             if (!sourceVideoElement.src || sourceVideoElement.readyState < 2 || seeking) {
                 return;
             }
             seeking = true;
@@ -609,6 +664,9 @@
             });
         }
 
+        /**
+         * Updates all the text labels for the sliders.
+         */
         function updateSliderValueDisplays() {
             patternDensityValueDisplay.textContent = `(${patternDensitySlider.value})`;
             randomnessValueDisplay.textContent = `(${parseFloat(randomnessSlider.value).toFixed(2)})`;
@@ -617,7 +675,6 @@
             maxShapeScaleValueDisplay.textContent = `(${parseFloat(maxShapeScaleSlider.value).toFixed(2)})`;
             videoBitrateValueDisplay.textContent = `(${videoBitrateSlider.value} Mbps)`; 
             
-            // NEW: Update color match slider display
             if (colorMatchThresholdValue) {
                 colorMatchThresholdValue.textContent = `(${colorMatchThresholdSlider.value})`;
             }
@@ -630,6 +687,10 @@
             }
         }
         
+        /**
+         * Initializes the noUiSlider for trimming the video.
+         * @param {number} videoDuration - The total duration of the video.
+         */
         function initializeRangeSlider(videoDuration) {
             const initialEnd = Math.min(MAX_PROCESSING_DURATION, videoDuration);
             if (videoRangeSlider.noUiSlider) {
@@ -670,7 +731,10 @@
             });
         }
 
-
+        /**
+         * Loads a video file, sets up the UI, and prepares for processing.
+         * @param {File} file - The video file to load.
+         */
         function loadVideoFromFile(file) { 
             try {
                 resetVideoState(); 
@@ -685,10 +749,12 @@
                 sourceVideoElement.load();
             } catch (error) {
                 console.error("Error loading video:", error);
-                alert("Failed to load video file.");
             }
         }
         
+        /**
+         * Resets the video state and UI to its initial condition.
+         */
         function resetVideoState() {
             currentVideoFile = null;
             sourceVideoElement.removeAttribute('src');
@@ -700,7 +766,7 @@
             processVideoButton.disabled = true;
         }
         
-        // --- NEW/MODIFIED: Core Pattern Generation Logic ---
+        // --- Core Pattern Generation Logic ---
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -711,18 +777,12 @@
             } : null;
         }
 
-        // NEW: Sobel operator kernels for edge detection
-        const sobelX = [
-            [-1, 0, 1],
-            [-2, 0, 2],
-            [-1, 0, 1]
-        ];
-        const sobelY = [
-            [-1, -2, -1],
-            [0, 0, 0],
-            [1, 2, 1]
-        ];
+        const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+        const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
 
+        /**
+         * Generates the pattern for the current video frame based on the selected settings.
+         */
         function generatePatternForCurrentFrame() {
             if (!offscreenFrameCanvas.width || isProcessingVideo) return;
 
@@ -752,7 +812,6 @@
             const imageData = offscreenFrameCtx.getImageData(0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
             const data = imageData.data;
             
-            // NEW: Edge detection data pre-calculation
             let edgeData = null;
             if (analysisMode === 'edgeDetection') {
                 edgeData = new Uint8ClampedArray(offscreenFrameCanvas.width * offscreenFrameCanvas.height);
@@ -767,28 +826,23 @@
                                 Gy += sobelY[ky + 1][kx + 1] * brightness;
                             }
                         }
-                        const magnitude = Math.sqrt(Gx * Gx + Gy * Gy);
-                        edgeData[y * offscreenFrameCanvas.width + x] = magnitude;
+                        edgeData[y * offscreenFrameCanvas.width + x] = Math.sqrt(Gx * Gx + Gy * Gy);
                     }
                 }
             }
-
 
             for (let row = 0; row < gridRows; row++) {
                 for (let col = 0; col < gridCols; col++) {
                     const sampleX = Math.floor((col + 0.5) / gridCols * offscreenFrameCanvas.width);
                     const sampleY = Math.floor((row + 0.5) / gridRows * offscreenFrameCanvas.height);
                     const pixelIndex = (sampleY * offscreenFrameCanvas.width + sampleX) * 4;
-
                     let conditionMet = false;
 
-                    // NEW: Switch between analysis modes
                     switch (analysisMode) {
                         case 'luminance':
                             const brightness = 0.299 * data[pixelIndex] + 0.587 * data[pixelIndex + 1] + 0.114 * data[pixelIndex + 2];
                             conditionMet = invert ? (brightness > brightnessThreshold) : (brightness < brightnessThreshold);
                             break;
-                        
                         case 'colorMatch':
                             if (targetColor) {
                                 const r = data[pixelIndex];
@@ -798,7 +852,6 @@
                                 conditionMet = invert ? (distance > colorMatchThreshold) : (distance < colorMatchThreshold);
                             }
                             break;
-
                         case 'edgeDetection':
                              const edgeMagnitude = edgeData[sampleY * offscreenFrameCanvas.width + sampleX];
                              conditionMet = invert ? (edgeMagnitude < brightnessThreshold) : (edgeMagnitude > brightnessThreshold);
@@ -817,20 +870,26 @@
             }
         }
         
-        // MODIFIED: drawShape function to handle new sizing logic
+        /**
+         * Draws a shape (circle or square) on the canvas.
+         * @param {CanvasRenderingContext2D} ctx - The canvas context to draw on.
+         * @param {number} x - The center x-coordinate.
+         * @param {number} y - The center y-coordinate.
+         * @param {number} size - The diameter for a circle, or the diagonal for a square.
+         * @param {boolean} isCircle - True to draw a circle, false for a square.
+         */
         function drawShape(ctx, x, y, size, isCircle) {
             ctx.beginPath();
             if (isCircle) {
                 ctx.arc(x, y, size / 2, 0, Math.PI * 2);
             } else {
-                 // The square's diagonal will now be `size`, making it fit inside the circle.
                 const side = size / Math.sqrt(2); 
                 ctx.rect(x - side / 2, y - side / 2, side, side);
             }
             ctx.fill();
         }
 
-        // --- MODIFIED: Video Processing Loop ---
+        // --- Video Processing Loop ---
         async function processVideo() {
             if (isProcessingVideo) return;
             isProcessingVideo = true;
@@ -851,12 +910,9 @@
 
             const totalFrames = Math.floor(duration * TARGET_FPS);
             const frameInterval = 1 / TARGET_FPS;
-            
             recordedChunks = [];
 
-            // Set up recording canvas
-            const outputAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-            const { width: outputWidth, height: outputHeight } = calculateCanvasDimensions(PREVIEW_CANVAS_MAX_DIM, outputAspectRatio);
+            const { width: outputWidth, height: outputHeight } = calculateCanvasDimensions(PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
             outputPatternCanvas.width = outputWidth;
             outputPatternCanvas.height = outputHeight;
             
@@ -867,9 +923,7 @@
             });
 
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
+                if (event.data.size > 0) recordedChunks.push(event.data);
             };
 
             mediaRecorder.onstop = () => {
@@ -896,7 +950,6 @@
                 const currentTime = startTime + i * frameInterval;
                 progressText.textContent = `Processing frame ${i + 1} of ${totalFrames}`;
 
-                // Use a non-blocking seek function that resolves when the frame is ready
                 await new Promise(resolve => {
                     const onSeeked = () => {
                         sourceVideoElement.removeEventListener('seeked', onSeeked);
@@ -906,15 +959,12 @@
                     sourceVideoElement.currentTime = currentTime;
                 });
                 
-                // Draw source video to offscreen canvas
                 offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
                 offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
                 offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
                 
-                // Generate and draw the pattern
                 generatePatternForCurrentFrame();
                 
-                // Update progress
                 const progress = ((i + 1) / totalFrames) * 100;
                 progressBarFill.style.width = `${progress}%`;
                 progressBarFill.textContent = `${Math.round(progress)}%`;
@@ -925,16 +975,13 @@
 
         // --- Event Listeners Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Initial setup
             populateColorPickers();
             updateSliderValueDisplays();
             setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "UPLOAD A VIDEO TO START");
             setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "START");
             setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "END");
 
-            // Slider listeners
-            const sliders = [patternDensitySlider, randomnessSlider, brightnessThresholdSlider, colorMatchThresholdSlider];
-            sliders.forEach(slider => {
+            [patternDensitySlider, randomnessSlider, brightnessThresholdSlider, colorMatchThresholdSlider].forEach(slider => {
                 slider.addEventListener('input', updateSliderValueDisplays);
                 slider.addEventListener('change', generatePatternForCurrentFrame);
             });
@@ -945,46 +992,30 @@
                 VIDEO_BITRATE = parseInt(videoBitrateSlider.value) * 1000000;
             });
             
-            // Other controls
             invertSourceColorsToggle.addEventListener('change', generatePatternForCurrentFrame);
             colorMatchColorPicker.addEventListener('input', generatePatternForCurrentFrame);
 
-            // NEW: Analysis mode change listener
             analysisModeSelect.addEventListener('change', (e) => {
                 const mode = e.target.value;
                 luminanceControl.classList.toggle('hidden', mode !== 'luminance' && mode !== 'edgeDetection');
                 colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
-                // Change label for luminance slider based on mode
                 const lumaLabel = luminanceControl.querySelector('label');
-                if (mode === 'edgeDetection') {
-                    lumaLabel.firstChild.textContent = 'EDGE THRESHOLD ';
-                } else {
-                    lumaLabel.firstChild.textContent = 'LUMA SENSITIVITY ';
-                }
+                lumaLabel.firstChild.textContent = mode === 'edgeDetection' ? 'EDGE THRESHOLD ' : 'LUMA SENSITIVITY ';
                 generatePatternForCurrentFrame();
             });
 
-            // Video upload listeners
             uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
             videoUploadInput.addEventListener('change', handleVideoUpload);
             dropZone.addEventListener('click', () => videoUploadInput.click());
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                dropZone.classList.add('border-black');
-            });
-            dropZone.addEventListener('dragleave', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                dropZone.classList.remove('border-black');
-            });
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-black'); });
+            dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-black'); });
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault(); e.stopPropagation();
-                dropZone.classList.remove('border-black');
                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                     loadVideoFromFile(e.dataTransfer.files[0]);
                 }
             });
 
-            // Video element listeners
             sourceVideoElement.addEventListener('loadedmetadata', async () => {
                 videoOriginalDuration = sourceVideoElement.duration;
                 videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
@@ -994,7 +1025,6 @@
                 videoTrimControls.classList.remove('hidden');
                 initializeRangeSlider(videoOriginalDuration);
                 
-                // Trigger initial preview draws
                 const [start, end] = getRangeValues();
                 await seekAndDrawPreview(start, sourcePreviewCanvas, sourcePreviewCtx, true);
                 await seekAndDrawPreview(end, endFramePreviewCanvas, endFramePreviewCtx);
@@ -1002,15 +1032,14 @@
                 updateProcessButtonState();
             });
 
+            // MODIFIED: Replaced alert with console.error for better debugging.
             sourceVideoElement.addEventListener('error', () => {
-                alert('There was an error loading the video. The file might be corrupt or in an unsupported format.');
+                console.error('There was an error loading the video. The file might be corrupt or in an unsupported format.');
                 resetVideoState();
             });
 
-            // Process button
             processVideoButton.addEventListener('click', processVideo);
         });
-
     </script>
 </body>
 </html>
