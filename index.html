@@ -828,11 +828,13 @@
             // Try to get the video's actual frame rate for the stream
             let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
             if (!videoTrack && currentVideoFile) {
-                // Fallback for when srcObject is not available
                 const tempVideo = document.createElement('video');
-                tempVideo.src = URL.createObjectURL(currentVideoFile);
+                const objectURL = URL.createObjectURL(currentVideoFile);
+                tempVideo.src = objectURL;
                 await new Promise(res => tempVideo.onloadedmetadata = res);
-                videoTrack = tempVideo.captureStream().getVideoTracks()[0];
+                const tempStream = tempVideo.captureStream();
+                videoTrack = tempStream.getVideoTracks()[0];
+                URL.revokeObjectURL(objectURL); 
             }
             const actualFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
 
@@ -847,6 +849,7 @@
                 a.style.display = 'none'; a.href = url; a.download = `pattern-video-${Date.now()}.webm`;
                 document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 
                 // Restore preview canvas to its original size
@@ -864,11 +867,12 @@
             let frameCount = 0;
             const processFrame = (now, metadata) => {
                 // Stop when the video's current time exceeds the end time
-                if (metadata.mediaTime >= endTime || sourceVideoElement.currentTime >= endTime) {
+                if (sourceVideoElement.currentTime >= endTime) {
+                    sourceVideoElement.pause(); // FIX: Pause playback
                     if (mediaRecorder.state === "recording") {
                         mediaRecorder.stop();
                     }
-                    return;
+                    return; // Stop the callback loop
                 }
 
                 // Draw video frame to offscreen canvas, then generate pattern
@@ -878,7 +882,7 @@
                 // Update progress bar
                 frameCount++;
                 progressText.textContent = `Processing frame ${frameCount}`;
-                const progress = ((metadata.mediaTime - startTime) / totalDuration) * 100;
+                const progress = ((sourceVideoElement.currentTime - startTime) / totalDuration) * 100;
                 progressBarFill.style.width = `${Math.min(100, progress)}%`;
                 progressBarFill.textContent = `${Math.round(Math.min(100, progress))}%`;
 
@@ -887,9 +891,23 @@
             };
 
             // Start the process
-            mediaRecorder.start();
+            sourceVideoElement.addEventListener('seeked', async function onSeeked() {
+                sourceVideoElement.removeEventListener('seeked', onSeeked);
+                
+                try {
+                    mediaRecorder.start();
+                    await sourceVideoElement.play(); // FIX: Start playback
+                    sourceVideoElement.requestVideoFrameCallback(processFrame);
+                } catch(e) {
+                    console.error("Error starting video processing:", e);
+                    isProcessingVideo = false;
+                    updateProcessButtonState();
+                }
+
+            }, { once: true });
+            
             sourceVideoElement.currentTime = startTime;
-            sourceVideoElement.requestVideoFrameCallback(processFrame);
+
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
