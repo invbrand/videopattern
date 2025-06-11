@@ -453,7 +453,7 @@
             colorMatchColorPicker.addEventListener('input', generatePatternForCurrentFrame);
 
             uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
-            videoUploadInput.addEventListener('change', handleVideoUpload);
+            videoUploadInput.addEventListener('change', handleImageUpload);
             dropZone.addEventListener('click', () => videoUploadInput.click());
             dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-black'); });
             dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-black'); });
