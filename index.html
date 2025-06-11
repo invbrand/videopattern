@@ -681,9 +681,8 @@
             });
         }
         
-        // --- Core Pattern Generation Logic (FIXED) ---
+        // --- Core Pattern Generation Logic ---
 
-        // FIX 1: Re-added the equalizeHistogram function
         function equalizeHistogram(ctx) {
             const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
             const data = imageData.data;
@@ -717,11 +716,12 @@
             return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
         }
 
-        // FIX 2: Rewrote the pattern generation to be more robust, combining old and new logic
         function generatePatternForCurrentFrame() {
-            if (!offscreenFrameCanvas.width || isProcessingVideo) return;
+            // *** FIX APPLIED HERE ***
+            // The check for `isProcessingVideo` has been removed. 
+            // This ensures that this function runs correctly during the video export process.
+            if (!offscreenFrameCanvas.width) return;
             
-            // Re-added this crucial step
             equalizeHistogram(offscreenFrameCtx);
 
             const density = parseInt(patternDensitySlider.value);
@@ -757,7 +757,7 @@
                     let baseStrength = 0;
 
                     if (analysisMode === 'luminance') {
-                        const brightness = data[pixelIndex]; // Already equalized, so we just use the red channel
+                        const brightness = data[pixelIndex];
                         baseStrength = invert ? (brightness / 255.0) : (1.0 - (brightness / 255.0));
                     } else if (analysisMode === 'colorMatch') {
                         const targetColor = hexToRgb(colorMatchColorPicker.value);
@@ -794,7 +794,7 @@
             ctx.fill();
         }
 
-        // --- Video Processing Loop (Unchanged but relies on the fixed functions) ---
+        // --- Video Processing Loop ---
         async function processVideo() {
             if (isProcessingVideo) return;
             isProcessingVideo = true;
