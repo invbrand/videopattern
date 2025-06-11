@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
     <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
     <style>
-        /* General body and container styling */
         body {
             font-family: 'Roboto Mono', monospace;
             overscroll-behavior: none;
@@ -21,12 +20,8 @@
             margin: 1rem auto;
             max-width: 900px; 
         }
-
-        /* Header styling */
         .header-title { color: #000000; font-weight: 600; } 
         .header-subtitle { color: #6b7280; font-size: 0.875rem; }
-
-        /* Button styling */
         .upload-button {
             background-color: #1f2937; 
             color: white;
@@ -41,7 +36,6 @@
         .upload-button:hover { background-color: #374151; }
         .upload-button:disabled { background-color: #9ca3af; cursor: not-allowed;}
         
-        /* Control group and slider styling */
         .control-group label.control-label {
             font-weight: 500; 
             margin-bottom: 0.75rem; 
@@ -71,7 +65,6 @@
             background: #000000; cursor: pointer; border: none;
         }
         
-        /* Color picker styling */
         .colors-section { margin-top: 1.5rem; }
         .color-picker-label {
             font-weight: 500; font-size: 0.75rem; color: #000000;
@@ -79,7 +72,6 @@
             margin-right: 0.75rem; 
         }
         .picker-group {
-            /* MODIFIED: Changed flex-wrap to wrap to allow color swatches to go to the next line */
             display: flex; flex-wrap: wrap; gap: 0.25rem; 
             align-items: center; 
         }
@@ -88,9 +80,6 @@
             position: absolute;
             width: 0;
             height: 0;
-            margin: 0;
-            padding: 0;
-            pointer-events: none;
         }
         .radio-label.color-radio { 
             display: flex; align-items: center; justify-content: center; 
@@ -108,7 +97,6 @@
             border: 1px solid rgba(0,0,0,0.1); 
         }
         
-        /* Video trimming controls styling */
         #videoTrimControls { margin-top: 2rem; }
         #videoRangeSlider {
             height: 8px;
@@ -149,20 +137,6 @@
             white-space: nowrap;
             border: none;
         }
-
-        /* Canvas and preview styling */
-        .frame-info-text { font-size: 0.75rem; color: #4b5563; text-align: center; margin-top: 0.5rem;}
-        .preview-column {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; 
-            margin-top: 2rem; 
-        }
-        .canvas-preview-wrapper { 
-            width: 100%;
-            border: 1px solid #e5e7eb; 
-            background-color: #ffffff;
-        }
         .canvas-preview { 
             max-width: 100%; height: auto; display: block; background-color: #f0f2f5; 
         }
@@ -183,8 +157,6 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-
-        /* Generate button and progress bar styling */
         .generate-button {
             background-color: #000000; 
             color: white;
@@ -211,8 +183,6 @@
             display: flex; align-items: center; justify-content: center;
             color: white; font-size: 0.625rem; 
         }
-
-        /* Styling for new analysis mode controls */
         .select-input {
             width: 100%;
             padding: 0.3rem 0.5rem;
@@ -258,14 +228,13 @@
             <div class="controls-section space-y-5"> 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
                     <div class="control-group">
-                        <label for="patternDensitySlider" class="control-label">SHAPE DENSITY <span id="patternDensityValue" class="slider-value-label">(70)</span></label>
-                        <input type="range" id="patternDensitySlider" min="10" max="200" value="70" class="slider w-full">
+                        <label for="patternDensitySlider" class="control-label">SHAPE DENSITY <span id="patternDensityValue" class="slider-value-label">(170)</span></label>
+                        <input type="range" id="patternDensitySlider" min="10" max="200" value="170" class="slider w-full">
                     </div>
                     <div class="control-group">
                         <label for="randomnessSlider" class="control-label">SHAPE MIX <span id="randomnessValue" class="slider-value-label">(0.50)</span></label>
                         <input type="range" id="randomnessSlider" min="0" max="1" value="0.5" step="0.01" class="slider w-full">
                     </div>
-                    <!-- Analysis Mode Dropdown -->
                     <div class="control-group">
                         <label for="analysisModeSelect" class="control-label">Analysis Mode</label>
                         <select id="analysisModeSelect" class="select-input">
@@ -276,22 +245,21 @@
                     </div>
 
                     <div class="control-group">
-                        <label for="minShapeScaleSlider" class="control-label">MIN SHAPE SIZE <span id="minShapeScaleValue" class="slider-value-label">(0.20)</span></label>
-                        <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.2" step="0.01" class="slider w-full">
+                        <label for="minShapeScaleSlider" class="control-label">MIN SHAPE SIZE <span id="minShapeScaleValue" class="slider-value-label">(0.01)</span></label>
+                        <input type="range" id="minShapeScaleSlider" min="0.01" max="1.0" value="0.01" step="0.01" class="slider w-full">
                     </div>
                     <div class="control-group">
-                        <label for="maxShapeScaleSlider" class="control-label">MAX SHAPE SIZE <span id="maxShapeScaleValue" class="slider-value-label">(0.70)</span></label>
-                        <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.7" step="0.01" class="slider w-full">
+                        <label for="maxShapeScaleSlider" class="control-label">MAX SHAPE SIZE <span id="maxShapeScaleValue" class="slider-value-label">(0.90)</span></label>
+                        <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.90" step="0.01" class="slider w-full">
                     </div>
                     <div class="control-group">
                         <label for="videoBitrateSlider" class="control-label">VIDEO BITRATE <span id="videoBitrateValue" class="slider-value-label">(25 Mbps)</span></label>
                         <input type="range" id="videoBitrateSlider" min="1" max="50" value="25" step="1" class="slider w-full">
                     </div>
                    
-                    <!-- Sliders for different analysis modes -->
                     <div id="luminanceControl" class="control-group">
-                        <label for="brightnessThresholdSlider" class="control-label">LUMA SENSITIVITY <span id="brightnessThresholdValue" class="slider-value-label">(120)</span></label>
-                        <input type="range" id="brightnessThresholdSlider" min="0" max="255" value="120" class="slider w-full">
+                        <label for="brightnessThresholdSlider" class="control-label">RELATIVE SENSITIVITY <span id="brightnessThresholdValue" class="slider-value-label">(0%)</span></label>
+                        <input type="range" id="brightnessThresholdSlider" min="-100" max="200" value="0" step="1" class="slider w-full">
                     </div>
                     
                     <div id="colorMatchControl" class="control-group hidden">
@@ -303,25 +271,22 @@
                     </div>
                 </div>
 
-                <!-- MODIFIED: Restructured color controls section -->
                 <div class="colors-section pt-2">
                     <span class="group-label">COLORS</span>
                     <div class="flex items-start justify-between mt-2">
-                        <!-- Left column for pickers -->
                         <div class="flex flex-col space-y-3">
                             <div class="flex items-center">
-                                <span class="color-picker-label mr-2">SHAPE</span>
+                                <span class="color-picker-label w-28 flex-shrink-0">SHAPE</span>
                                 <div id="shapeColorPickerContainer" class="picker-group"></div>
                             </div>
                             <div class="flex items-center">
-                                <span class="color-picker-label mr-2">BACKGROUND</span>
+                                <span class="color-picker-label w-28 flex-shrink-0">BACKGROUND</span>
                                 <div id="bgColorPickerContainer" class="picker-group"></div>
                             </div>
                         </div>
-                        <!-- Right side for invert toggle -->
                         <div class="flex items-center pt-2">
-                            <label for="invertSourceColorsToggle" class="control-label text-xs whitespace-nowrap mr-2">INVERT</label>
-                            <input type="checkbox" id="invertSourceColorsToggle" class="h-4 w-4 text-black border-gray-400 rounded focus:ring-black" style="accent-color: #000000;" />
+                            <label for="invertToggle" class="control-label text-xs whitespace-nowrap mr-2">INVERT</label>
+                            <input type="checkbox" id="invertToggle" class="h-4 w-4 text-black border-gray-400 rounded focus:ring-black" style="accent-color: #000000;" />
                         </div>
                     </div>
                 </div>
@@ -337,7 +302,7 @@
                 </div>
             </div>
 
-            <div class="preview-section flex flex-col space-y-4">
+            <div class="preview-section flex-1 flex flex-col space-y-4">
                 <div id="dropZone" class="w-full border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-black transition-colors bg-gray-50">
                      <div id="dropZoneContent"> 
                          <svg class="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -347,7 +312,7 @@
                 </div>
                 
                 <div class="w-full">
-                    <div id="outputPatternCanvasContainer" class="canvas-container bg-gray-800">
+                    <div id="outputPatternCanvasContainer" class="bg-gray-200">
                         <canvas id="outputPatternCanvas" class="canvas-preview main-preview-canvas"></canvas>
                     </div>
                 </div>
@@ -403,18 +368,18 @@
         const patternDensityValueDisplay = document.getElementById('patternDensityValue');
         const randomnessSlider = document.getElementById('randomnessSlider');
         const randomnessValueDisplay = document.getElementById('randomnessValue');
-        const brightnessThresholdSlider = document.getElementById('brightnessThresholdSlider');
-        const brightnessThresholdValueDisplay = document.getElementById('brightnessThresholdValue');
         const minShapeScaleSlider = document.getElementById('minShapeScaleSlider');
         const minShapeScaleValueDisplay = document.getElementById('minShapeScaleValue');
         const maxShapeScaleSlider = document.getElementById('maxShapeScaleSlider');
         const maxShapeScaleValueDisplay = document.getElementById('maxShapeScaleValue');
-        const invertSourceColorsToggle = document.getElementById('invertSourceColorsToggle');
+        const invertToggle = document.getElementById('invertToggle');
         const videoBitrateSlider = document.getElementById('videoBitrateSlider'); 
         const videoBitrateValueDisplay = document.getElementById('videoBitrateValue'); 
         
         const analysisModeSelect = document.getElementById('analysisModeSelect');
         const luminanceControl = document.getElementById('luminanceControl');
+        const brightnessThresholdSlider = document.getElementById('brightnessThresholdSlider');
+        const brightnessThresholdValueDisplay = document.getElementById('brightnessThresholdValue');
         const colorMatchControl = document.getElementById('colorMatchControl');
         const colorMatchThresholdSlider = document.getElementById('colorMatchThresholdSlider');
         const colorMatchThresholdValue = document.getElementById('colorMatchThresholdValue');
@@ -426,6 +391,7 @@
         const videoUploadInput = document.getElementById('videoUploadInput');
         const uploadButtonTrigger = document.getElementById('uploadButtonTrigger'); 
         const dropZone = document.getElementById('dropZone');
+        const dropZoneContent = document.getElementById('dropZoneContent');
         
         const framePreviewsContainer = document.getElementById('framePreviewsContainer'); 
         const sourcePreviewCanvas = document.getElementById('sourcePreviewCanvas'); 
@@ -453,113 +419,118 @@
         let videoOriginalDuration = 0;
         let offscreenFrameCanvas = document.createElement('canvas'); 
         let offscreenFrameCtx = offscreenFrameCanvas.getContext('2d', { willReadFrequently: true });
+        offscreenFrameCtx.imageSmoothingEnabled = false;
         
         let mediaRecorder;
         let recordedChunks = [];
         let isProcessingVideo = false;
         let seeking = false;
+        let debounceTimer;
 
-        // --- Helper and Logic Functions ---
-
-        /**
-         * Calculates canvas dimensions based on a maximum dimension and aspect ratio.
-         * @param {number} maxDim - The maximum width or height of the canvas.
-         * @param {number} aspectRatio - The aspect ratio (width / height).
-         * @returns {{width: number, height: number}} The calculated dimensions.
-         */
-        function calculateCanvasDimensions(maxDim, aspectRatio) {
-            let canvasWidth, canvasHeight;
-            if (!aspectRatio || isNaN(aspectRatio)) aspectRatio = 16/9; 
-            if (aspectRatio >= 1) { 
-                canvasWidth = maxDim; canvasHeight = maxDim / aspectRatio;
-            } else { 
-                canvasHeight = maxDim; canvasWidth = maxDim * aspectRatio;
-            }
-            return { width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
+        // --- Initialization ---
+        function initialize() {
+            populateColorPickers();
+            addEventListeners();
+            updateSliderValueDisplays();
+            setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, 16/9, true, "UPLOAD A VIDEO TO START");
+            setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, 16/9, true, "START");
+            setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, 16/9, true, "END");
         }
 
-        /**
-         * Sets up the initial state of a canvas, including size and an optional placeholder.
-         * @param {HTMLCanvasElement} canvas - The canvas element to set up.
-         * @param {number} maxDim - The maximum dimension for the canvas.
-         * @param {number} aspectRatio - The aspect ratio for the canvas.
-         * @param {boolean} [isPlaceholder=false] - Whether to draw a placeholder.
-         * @param {string} [placeholderText="Preview"] - Text for the placeholder.
-         */
-        function setupInitialCanvas(canvas, maxDim, aspectRatio, isPlaceholder = false, placeholderText = "Preview") {
-            const { width, height } = calculateCanvasDimensions(maxDim, aspectRatio);
-            canvas.width = width;
-            canvas.height = height;
-            
-            if (canvas === outputPatternCanvas) {
-                 outputPatternCanvasContainer.style.setProperty('--output-aspect-ratio', `${width} / ${height}`);
-            } else if (canvas === sourcePreviewCanvas || canvas === endFramePreviewCanvas) {
-                canvas.style.setProperty('--source-aspect-ratio', `${width} / ${height}`);
-            }
-            
-            if (isPlaceholder) {
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = "#f0f2f5"; 
-                ctx.fillRect(0, 0, width, height);
-                ctx.fillStyle = "#6b7280"; 
-                ctx.font = `bold ${Math.min(12, width / 15)}px 'Roboto Mono', monospace`; 
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(placeholderText, width / 2, height / 2);
-            }
-        }
-        
-        /**
-         * Creates a styled radio button option, typically for color selection.
-         * @param {HTMLElement} container - The container for the radio button.
-         * @param {string} name - The name attribute for the radio group.
-         * @param {object} optionData - Data for the option (e.g., {hex: '#...', name: '...'}).
-         * @param {boolean} isChecked - Whether the option should be checked by default.
-         * @param {boolean} isColorOption - True if this is a color swatch.
-         */
-        function createRadioOptionBase(container, name, optionData, isChecked, isColorOption) {
-            const radioId = `${name}_${isColorOption ? optionData.hex.replace('#', '') : optionData.value}`;
-            const radioInput = document.createElement('input');
-            radioInput.type = 'radio'; radioInput.id = radioId; radioInput.name = name;
-            radioInput.value = isColorOption ? optionData.hex : optionData.value;
-            radioInput.className = 'radio-input';
-            if (isChecked) radioInput.checked = true;
-            
-            radioInput.addEventListener('change', generatePatternForCurrentFrame);
+        function addEventListeners() {
+            [patternDensitySlider, randomnessSlider, brightnessThresholdSlider, minShapeScaleSlider, maxShapeScaleSlider, colorMatchThresholdSlider].forEach(slider => {
+                slider.addEventListener('input', () => {
+                    updateSliderValueDisplays();
+                    if (slider === minShapeScaleSlider || slider === maxShapeScaleSlider) {
+                         enforceMinMaxScaleLogic.call(slider);
+                    }
+                    generatePatternForCurrentFrame();
+                });
+            });
 
-            const radioLabel = document.createElement('label');
-            radioLabel.htmlFor = radioId;
-            radioLabel.className = 'radio-label color-radio';
-            
-            if (isColorOption) {
-                radioLabel.innerHTML = `<span class="color-swatch" style="background-color:${optionData.hex};" title="${optionData.name}"></span>`;
-            }
-            
-            container.appendChild(radioInput); 
-            container.appendChild(radioLabel);
+            invertToggle.addEventListener('change', generatePatternForCurrentFrame);
+            analysisModeSelect.addEventListener('change', handleAnalysisModeChange);
+            colorMatchColorPicker.addEventListener('input', generatePatternForCurrentFrame);
+
+            uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
+            videoUploadInput.addEventListener('change', handleVideoUpload);
+            dropZone.addEventListener('click', () => videoUploadInput.click());
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-black'); });
+            dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-black'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dropZone.classList.remove('border-black');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    loadVideoFromFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            sourceVideoElement.addEventListener('loadedmetadata', async () => {
+                videoOriginalDuration = sourceVideoElement.duration;
+                videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
+                
+                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
+                
+                videoTrimControls.classList.remove('hidden');
+                initializeRangeSlider(videoOriginalDuration);
+                
+                const [start, end] = getRangeValues();
+                await seekAndDrawPreview(start, sourcePreviewCanvas, sourcePreviewCtx, true);
+                await seekAndDrawPreview(end, endFramePreviewCanvas, endFramePreviewCtx);
+
+                updateProcessButtonState();
+            });
+            sourceVideoElement.addEventListener('error', () => {
+                console.error('Video loading error.');
+                resetVideoState();
+            });
+
+            processVideoButton.addEventListener('click', processVideo);
         }
 
-        function createColorRadioOption(container, name, colorData, isChecked) {
-            createRadioOptionBase(container, name, colorData, isChecked, true);
-        }
-
-        /**
-         * Populates the color picker containers with brand and grayscale colors.
-         */
+        // --- UI Population & Updates ---
         function populateColorPickers() {
-            bgColorPickerContainer.innerHTML = '';
-            shapeColorPickerContainer.innerHTML = '';
             const allColors = [...GRAYSCALE_COLORS, ...BRAND_COLORS];
-
-            allColors.forEach((color) => {
+            allColors.forEach(color => {
                 createColorRadioOption(bgColorPickerContainer, 'backgroundColor', color, color.hex === '#FFFFFF');
                 createColorRadioOption(shapeColorPickerContainer, 'shapeColor', color, color.hex === '#0F0F0F');
             });
         }
+
+        function createColorRadioOption(container, name, colorData, isChecked) {
+            const radioId = `${name}_${colorData.hex.replace('#', '')}`;
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio'; radioInput.id = radioId; radioInput.name = name;
+            radioInput.value = colorData.hex;
+            radioInput.className = 'radio-input';
+            if (isChecked) radioInput.checked = true;
+            radioInput.addEventListener('change', generatePatternForCurrentFrame);
+            const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = radioId;
+            radioLabel.className = 'radio-label color-radio';
+            radioLabel.innerHTML = `<span class="color-swatch" style="background-color:${colorData.hex};" title="${colorData.name}"></span>`;
+            container.appendChild(radioInput);
+            container.appendChild(radioLabel);
+        }
+
+        function updateSliderValueDisplays() {
+            patternDensityValueDisplay.textContent = `(${patternDensitySlider.value})`;
+            randomnessValueDisplay.textContent = `(${parseFloat(randomnessSlider.value).toFixed(2)})`;
+            const mode = analysisModeSelect.value;
+            const brightnessValue = parseInt(brightnessThresholdSlider.value);
+            if (mode === 'luminance') {
+                brightnessThresholdValueDisplay.textContent = `(${brightnessValue > 0 ? '+' : ''}${brightnessValue}%)`;
+            } else {
+                brightnessThresholdValueDisplay.textContent = `(${brightnessValue})`;
+            }
+            minShapeScaleValueDisplay.textContent = `(${parseFloat(minShapeScaleSlider.value).toFixed(2)})`;
+            maxShapeScaleValueDisplay.textContent = `(${parseFloat(maxShapeScaleSlider.value).toFixed(2)})`;
+            videoBitrateValueDisplay.textContent = `(${videoBitrateSlider.value} Mbps)`;
+            if (colorMatchThresholdValue) {
+                colorMatchThresholdValue.textContent = `(${colorMatchThresholdSlider.value})`;
+            }
+        }
         
-        /**
-         * Ensures that the min shape size is never greater than the max shape size.
-         */
         function enforceMinMaxScaleLogic() {
             let minVal = parseFloat(minShapeScaleSlider.value);
             let maxVal = parseFloat(maxShapeScaleSlider.value);
@@ -567,130 +538,18 @@
                 if (this === minShapeScaleSlider) maxShapeScaleSlider.value = minVal;
                 else minShapeScaleSlider.value = maxVal;
             }
-            updateSliderValueDisplays(); 
+            updateSliderValueDisplays();
             generatePatternForCurrentFrame();
         }
-        
-        /**
-         * Gets the current start and end times from the trim slider.
-         * @returns {number[]} An array containing [startTime, endTime].
-         */
-        function getRangeValues() {
-            if (!videoRangeSlider.noUiSlider) return [0, 0];
-            return videoRangeSlider.noUiSlider.get().map(v => parseFloat(v));
-        }
 
-        /**
-         * Updates the state of the "Generate" button based on app state.
-         */
-        function updateProcessButtonState() {
-            const [start, end] = getRangeValues();
-            const duration = Math.max(0, end - start);
-            let trimIsValid = !(duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0);
-
-            processVideoButton.disabled = !currentVideoFile || sourceVideoElement.readyState < 2 || isProcessingVideo || !trimIsValid;
-            processVideoButton.textContent = isProcessingVideo ? "PROCESSING..." : "GENERATE";
-        }
-        
-        /**
-         * Updates the text display for the selected video duration.
-         */
-        function updateSelectedDurationDisplay() {
-            try {
-                const [start, end] = getRangeValues();
-                const duration = Math.max(0, end - start);
-                selectedDurationDisplay.textContent = `${Math.floor(duration * TARGET_FPS)} FRAMES (${duration.toFixed(1)} SECONDS)`;
-                
-                if (duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0) {
-                    selectedDurationDisplay.classList.add('text-red-500');
-                } else {
-                    selectedDurationDisplay.classList.remove('text-red-500');
-                }
-                updateProcessButtonState(); 
-            } catch (error) {
-                console.error("Error in updateSelectedDurationDisplay:", error);
-            }
-        }
-        
-        /**
-         * Seeks the video to a specific time and draws a preview frame on a canvas.
-         * @param {number} time - The time to seek to in seconds.
-         * @param {HTMLCanvasElement} targetCanvas - The canvas to draw the preview on.
-         * @param {CanvasRenderingContext2D} targetCtx - The context of the target canvas.
-         * @param {boolean} [isMainPatternPreviewSource=false] - If true, also updates the main pattern preview.
-         * @returns {Promise<void>} A promise that resolves when the frame is drawn.
-         */
-        async function seekAndDrawPreview(time, targetCanvas, targetCtx, isMainPatternPreviewSource = false) {
-             // MODIFIED: Changed readyState check from < 1 to < 2 for more stability.
-             if (!sourceVideoElement.src || sourceVideoElement.readyState < 2 || seeking) {
-                return;
-            }
-            seeking = true;
-
-            return new Promise((resolve, reject) => {
-                const onSeeked = () => {
-                    sourceVideoElement.removeEventListener('seeked', onSeeked);
-                    sourceVideoElement.removeEventListener('error', onSeekError);
-                    
-                    const previewAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-                    const { width, height } = calculateCanvasDimensions(
-                        targetCanvas === outputPatternCanvas ? PREVIEW_CANVAS_MAX_DIM : SUB_PREVIEW_MAX_DIM,
-                        previewAspectRatio
-                    );
-                    targetCanvas.width = width;
-                    targetCanvas.height = height;
-                    targetCtx.drawImage(sourceVideoElement, 0, 0, width, height);
-
-                    if (isMainPatternPreviewSource) {
-                        offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
-                        offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
-                        offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
-                        generatePatternForCurrentFrame(); 
-                    }
-                    seeking = false;
-                    resolve();
-                };
-                const onSeekError = (e) => {
-                    console.error("Error during seek for preview:", e);
-                    sourceVideoElement.removeEventListener('seeked', onSeeked);
-                    sourceVideoElement.removeEventListener('error', onSeekError);
-                    seeking = false;
-                    reject(e);
-                };
-
-                sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
-                sourceVideoElement.addEventListener('error', onSeekError, { once: true });
-                sourceVideoElement.currentTime = Math.max(0, Math.min(time, videoOriginalDuration));
-            });
-        }
-
-        /**
-         * Updates all the text labels for the sliders.
-         */
-        function updateSliderValueDisplays() {
-            patternDensityValueDisplay.textContent = `(${patternDensitySlider.value})`;
-            randomnessValueDisplay.textContent = `(${parseFloat(randomnessSlider.value).toFixed(2)})`;
-            brightnessThresholdValueDisplay.textContent = `(${brightnessThresholdSlider.value})`;
-            minShapeScaleValueDisplay.textContent = `(${parseFloat(minShapeScaleSlider.value).toFixed(2)})`;
-            maxShapeScaleValueDisplay.textContent = `(${parseFloat(maxShapeScaleSlider.value).toFixed(2)})`;
-            videoBitrateValueDisplay.textContent = `(${videoBitrateSlider.value} Mbps)`; 
-            
-            if (colorMatchThresholdValue) {
-                colorMatchThresholdValue.textContent = `(${colorMatchThresholdSlider.value})`;
-            }
-        }
-
-        function handleVideoUpload(event) { 
+        // --- Event Handlers & Video Logic ---
+        function handleImageUpload(event) { 
             const file = event.target.files && event.target.files[0];
             if (file) {
                 loadVideoFromFile(file);
             }
         }
         
-        /**
-         * Initializes the noUiSlider for trimming the video.
-         * @param {number} videoDuration - The total duration of the video.
-         */
         function initializeRangeSlider(videoDuration) {
             const initialEnd = Math.min(MAX_PROCESSING_DURATION, videoDuration);
             if (videoRangeSlider.noUiSlider) {
@@ -708,15 +567,14 @@
                     { to: value => parseFloat(value).toFixed(1) + 's' },
                     { to: value => parseFloat(value).toFixed(1) + 's' }
                 ],
-                format: { 
-                    to: value => parseFloat(value).toFixed(1),
-                    from: value => parseFloat(value)
-                },
                 limit: MAX_PROCESSING_DURATION, 
                 margin: 0.1
             });
 
-            videoRangeSlider.noUiSlider.on('update', async (values, handle) => {
+            const debouncedSeekStart = debounce((time) => seekAndDrawPreview(time, sourcePreviewCanvas, sourcePreviewCtx, true), 200);
+            const debouncedSeekEnd = debounce((time) => seekAndDrawPreview(time, endFramePreviewCanvas, endFramePreviewCtx), 200);
+
+            videoRangeSlider.noUiSlider.on('update', (values, handle) => {
                 const startTime = parseFloat(values[0]);
                 const endTime = parseFloat(values[1]);
                 rangeInValue.textContent = startTime.toFixed(1);
@@ -724,17 +582,20 @@
                 updateSelectedDurationDisplay(); 
                 
                 if (handle === 0) { 
-                    await seekAndDrawPreview(startTime, sourcePreviewCanvas, sourcePreviewCtx, true);
+                    debouncedSeekStart(startTime);
                 } else if (handle === 1) { 
-                    await seekAndDrawPreview(endTime, endFramePreviewCanvas, endFramePreviewCtx);
+                    debouncedSeekEnd(endTime);
                 }
             });
         }
+        
+        function debounce(func, delay) {
+            return function(...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
 
-        /**
-         * Loads a video file, sets up the UI, and prepares for processing.
-         * @param {File} file - The video file to load.
-         */
         function loadVideoFromFile(file) { 
             try {
                 resetVideoState(); 
@@ -752,9 +613,6 @@
             }
         }
         
-        /**
-         * Resets the video state and UI to its initial condition.
-         */
         function resetVideoState() {
             currentVideoFile = null;
             sourceVideoElement.removeAttribute('src');
@@ -766,130 +624,106 @@
             processVideoButton.disabled = true;
         }
         
-        // --- Core Pattern Generation Logic ---
+        // --- Core Drawing & Analysis Logic ---
 
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
+        function equalizeHistogram(ctx) {
+            const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+            const data = imageData.data;
+            const hist = new Array(256).fill(0);
+            for (let i = 0; i < data.length; i += 4) {
+                hist[Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2])]++;
+            }
+
+            const cdf = new Array(256).fill(0);
+            cdf[0] = hist[0];
+            for (let i = 1; i < 256; i++) cdf[i] = cdf[i-1] + hist[i];
+            
+            let cdfMin = 0;
+            for(let i = 0; i < 256; i++) if (cdf[i] > 0) { cdfMin = cdf[i]; break; }
+
+            const lut = new Array(256);
+            const numPixels = data.length / 4;
+            for (let i = 0; i < 256; i++) {
+                lut[i] = Math.round(255 * (cdf[i] - cdfMin) / (numPixels - cdfMin));
+            }
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const luma = Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+                const newLuma = lut[luma];
+                data[i] = data[i+1] = data[i+2] = newLuma;
+            }
+            ctx.putImageData(imageData, 0, 0);
         }
 
-        const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
-        const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
-
-        /**
-         * Generates the pattern for the current video frame based on the selected settings.
-         */
         function generatePatternForCurrentFrame() {
             if (!offscreenFrameCanvas.width || isProcessingVideo) return;
+            equalizeHistogram(offscreenFrameCtx);
+            generatePatternOnCanvas(outputPatternCanvas, outputPatternCtx);
+        }
 
+        function generatePatternOnCanvas(canvas, ctx) {
+            if (!currentVideoFile) { /* Draw placeholder if no video */ return; }
+            
             const density = parseInt(patternDensitySlider.value);
             const gridCols = density;
             const gridRows = Math.round(density / videoAspectRatio);
-            const cellWidth = outputPatternCanvas.width / gridCols;
-            const cellHeight = outputPatternCanvas.height / gridRows;
+            const cellWidth = canvas.width / gridCols;
+            const cellHeight = canvas.height / gridRows;
 
             const randomness = parseFloat(randomnessSlider.value);
             const minScale = parseFloat(minShapeScaleSlider.value);
             const maxScale = parseFloat(maxShapeScaleSlider.value);
-            const brightnessThreshold = parseInt(brightnessThresholdSlider.value);
-            const invert = invertSourceColorsToggle.checked;
-
+            const invert = invertToggle.checked;
             const analysisMode = analysisModeSelect.value;
-            const colorMatchThreshold = parseInt(colorMatchThresholdSlider.value);
-            const targetColor = hexToRgb(colorMatchColorPicker.value);
-
-            const bgColor = document.querySelector('input[name="backgroundColor"]:checked').value;
-            const shapeColor = document.querySelector('input[name="shapeColor"]:checked').value;
-
-            outputPatternCtx.fillStyle = bgColor;
-            outputPatternCtx.fillRect(0, 0, outputPatternCanvas.width, outputPatternCanvas.height);
-            outputPatternCtx.fillStyle = shapeColor;
-
+            
+            const bgColor = getSelectedRadioValue('backgroundColor');
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const shapeColor = getSelectedRadioValue('shapeColor');
+            ctx.fillStyle = shapeColor;
+            
             const imageData = offscreenFrameCtx.getImageData(0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
             const data = imageData.data;
-            
-            let edgeData = null;
-            if (analysisMode === 'edgeDetection') {
-                edgeData = new Uint8ClampedArray(offscreenFrameCanvas.width * offscreenFrameCanvas.height);
-                for (let y = 1; y < offscreenFrameCanvas.height - 1; y++) {
-                    for (let x = 1; x < offscreenFrameCanvas.width - 1; x++) {
-                        let Gx = 0, Gy = 0;
-                        for (let ky = -1; ky <= 1; ky++) {
-                            for (let kx = -1; kx <= 1; kx++) {
-                                const i = ((y + ky) * offscreenFrameCanvas.width + (x + kx)) * 4;
-                                const brightness = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                                Gx += sobelX[ky + 1][kx + 1] * brightness;
-                                Gy += sobelY[ky + 1][kx + 1] * brightness;
-                            }
-                        }
-                        edgeData[y * offscreenFrameCanvas.width + x] = Math.sqrt(Gx * Gx + Gy * Gy);
-                    }
-                }
-            }
 
             for (let row = 0; row < gridRows; row++) {
                 for (let col = 0; col < gridCols; col++) {
                     const sampleX = Math.floor((col + 0.5) / gridCols * offscreenFrameCanvas.width);
                     const sampleY = Math.floor((row + 0.5) / gridRows * offscreenFrameCanvas.height);
                     const pixelIndex = (sampleY * offscreenFrameCanvas.width + sampleX) * 4;
-                    let conditionMet = false;
+                    
+                    let strengthFactor = 0;
+                    const brightness = data[pixelIndex]; // Already equalized and grayscale
+                    const baseStrength = invert ? (brightness / 255.0) : (1.0 - (brightness / 255.0));
 
-                    switch (analysisMode) {
-                        case 'luminance':
-                            const brightness = 0.299 * data[pixelIndex] + 0.587 * data[pixelIndex + 1] + 0.114 * data[pixelIndex + 2];
-                            conditionMet = invert ? (brightness > brightnessThreshold) : (brightness < brightnessThreshold);
-                            break;
-                        case 'colorMatch':
-                            if (targetColor) {
-                                const r = data[pixelIndex];
-                                const g = data[pixelIndex + 1];
-                                const b = data[pixelIndex + 2];
-                                const distance = Math.sqrt(Math.pow(r - targetColor.r, 2) + Math.pow(g - targetColor.g, 2) + Math.pow(b - targetColor.b, 2));
-                                conditionMet = invert ? (distance > colorMatchThreshold) : (distance < colorMatchThreshold);
-                            }
-                            break;
-                        case 'edgeDetection':
-                             const edgeMagnitude = edgeData[sampleY * offscreenFrameCanvas.width + sampleX];
-                             conditionMet = invert ? (edgeMagnitude < brightnessThreshold) : (edgeMagnitude > brightnessThreshold);
-                             break;
+                    if (baseStrength > 0.01) { // Threshold to ignore pure white
+                        const relativeSensitivity = parseInt(brightnessThresholdSlider.value);
+                        const sensitivityMultiplier = 1.0 + (relativeSensitivity / 100.0);
+                        strengthFactor = Math.pow(baseStrength, 1 / sensitivityMultiplier);
                     }
 
-                    if (conditionMet) {
-                        const scale = minScale + Math.random() * (maxScale - minScale);
+                    if (strengthFactor > 0) {
+                        const scale = minScale + strengthFactor * (maxScale - minScale);
                         const shapeSize = Math.min(cellWidth, cellHeight) * scale;
                         const centerX = (col + 0.5) * cellWidth;
                         const centerY = (row + 0.5) * cellHeight;
-                        const isCircle = Math.random() > randomness;
-                        drawShape(outputPatternCtx, centerX, centerY, shapeSize, isCircle);
+                        const isCircle = Math.random() < randomness;
+                        drawShape(ctx, centerX, centerY, shapeSize, isCircle);
                     }
                 }
             }
         }
         
-        /**
-         * Draws a shape (circle or square) on the canvas.
-         * @param {CanvasRenderingContext2D} ctx - The canvas context to draw on.
-         * @param {number} x - The center x-coordinate.
-         * @param {number} y - The center y-coordinate.
-         * @param {number} size - The diameter for a circle, or the diagonal for a square.
-         * @param {boolean} isCircle - True to draw a circle, false for a square.
-         */
         function drawShape(ctx, x, y, size, isCircle) {
             ctx.beginPath();
             if (isCircle) {
                 ctx.arc(x, y, size / 2, 0, Math.PI * 2);
             } else {
-                const side = size / Math.sqrt(2); 
+                const side = size * 0.75;
                 ctx.rect(x - side / 2, y - side / 2, side, side);
             }
             ctx.fill();
         }
-
-        // --- Video Processing Loop ---
+        
         async function processVideo() {
             if (isProcessingVideo) return;
             isProcessingVideo = true;
@@ -897,35 +731,17 @@
             progressContainer.classList.remove('hidden');
             progressText.textContent = 'Initializing...';
             progressBarFill.style.width = '0%';
-            progressBarFill.textContent = '0%';
             
             const [startTime, endTime] = getRangeValues();
             const duration = endTime - startTime;
-            if (duration <= 0) {
-                isProcessingVideo = false;
-                updateProcessButtonState();
-                progressContainer.classList.add('hidden');
-                return;
-            }
-
             const totalFrames = Math.floor(duration * TARGET_FPS);
             const frameInterval = 1 / TARGET_FPS;
-            recordedChunks = [];
-
-            const { width: outputWidth, height: outputHeight } = calculateCanvasDimensions(PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
-            outputPatternCanvas.width = outputWidth;
-            outputPatternCanvas.height = outputHeight;
             
+            recordedChunks = [];
             const stream = outputPatternCanvas.captureStream(TARGET_FPS);
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm; codecs=vp9',
-                videoBitsPerSecond: VIDEO_BITRATE
-            });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
-            };
-
+            mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) recordedChunks.push(event.data); };
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
                 const url = URL.createObjectURL(blob);
@@ -936,20 +752,15 @@
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                
                 isProcessingVideo = false;
                 updateProcessButtonState();
                 progressText.textContent = "Complete!";
-                progressBarFill.style.width = '100%';
-                progressBarFill.textContent = '100%';
             };
 
             mediaRecorder.start();
 
             for (let i = 0; i < totalFrames; i++) {
                 const currentTime = startTime + i * frameInterval;
-                progressText.textContent = `Processing frame ${i + 1} of ${totalFrames}`;
-
                 await new Promise(resolve => {
                     const onSeeked = () => {
                         sourceVideoElement.removeEventListener('seeked', onSeeked);
@@ -973,73 +784,7 @@
             mediaRecorder.stop();
         }
 
-        // --- Event Listeners Setup ---
-        document.addEventListener('DOMContentLoaded', () => {
-            populateColorPickers();
-            updateSliderValueDisplays();
-            setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio, true, "UPLOAD A VIDEO TO START");
-            setupInitialCanvas(sourcePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "START");
-            setupInitialCanvas(endFramePreviewCanvas, SUB_PREVIEW_MAX_DIM, videoAspectRatio, true, "END");
-
-            [patternDensitySlider, randomnessSlider, brightnessThresholdSlider, colorMatchThresholdSlider].forEach(slider => {
-                slider.addEventListener('input', updateSliderValueDisplays);
-                slider.addEventListener('change', generatePatternForCurrentFrame);
-            });
-            minShapeScaleSlider.addEventListener('input', enforceMinMaxScaleLogic);
-            maxShapeScaleSlider.addEventListener('input', enforceMinMaxScaleLogic);
-            videoBitrateSlider.addEventListener('input', () => {
-                updateSliderValueDisplays();
-                VIDEO_BITRATE = parseInt(videoBitrateSlider.value) * 1000000;
-            });
-            
-            invertSourceColorsToggle.addEventListener('change', generatePatternForCurrentFrame);
-            colorMatchColorPicker.addEventListener('input', generatePatternForCurrentFrame);
-
-            analysisModeSelect.addEventListener('change', (e) => {
-                const mode = e.target.value;
-                luminanceControl.classList.toggle('hidden', mode !== 'luminance' && mode !== 'edgeDetection');
-                colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
-                const lumaLabel = luminanceControl.querySelector('label');
-                lumaLabel.firstChild.textContent = mode === 'edgeDetection' ? 'EDGE THRESHOLD ' : 'LUMA SENSITIVITY ';
-                generatePatternForCurrentFrame();
-            });
-
-            uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
-            videoUploadInput.addEventListener('change', handleVideoUpload);
-            dropZone.addEventListener('click', () => videoUploadInput.click());
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-black'); });
-            dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-black'); });
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    loadVideoFromFile(e.dataTransfer.files[0]);
-                }
-            });
-
-            sourceVideoElement.addEventListener('loadedmetadata', async () => {
-                videoOriginalDuration = sourceVideoElement.duration;
-                videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-                
-                setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
-                
-                videoTrimControls.classList.remove('hidden');
-                initializeRangeSlider(videoOriginalDuration);
-                
-                const [start, end] = getRangeValues();
-                await seekAndDrawPreview(start, sourcePreviewCanvas, sourcePreviewCtx, true);
-                await seekAndDrawPreview(end, endFramePreviewCanvas, endFramePreviewCtx);
-
-                updateProcessButtonState();
-            });
-
-            // MODIFIED: Replaced alert with console.error for better debugging.
-            sourceVideoElement.addEventListener('error', () => {
-                console.error('There was an error loading the video. The file might be corrupt or in an unsupported format.');
-                resetVideoState();
-            });
-
-            processVideoButton.addEventListener('click', processVideo);
-        });
+        document.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>
 </html>
