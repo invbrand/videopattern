@@ -249,17 +249,17 @@
                         <label for="maxShapeScaleSlider" class="control-label">MAX SHAPE SIZE <span id="maxShapeScaleValue" class="slider-value-label">(0.90)</span></label>
                         <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.90" step="0.01" class="slider w-full">
                     </div>
-                    <div class="control-group">
-                        <label for="videoBitrateSlider" class="control-label">VIDEO BITRATE <span id="videoBitrateValue" class="slider-value-label">(25 Mbps)</span></label>
-                        <input type="range" id="videoBitrateSlider" min="1" max="50" value="25" step="1" class="slider w-full">
-                    </div>
-                   
-                    <div id="luminanceControl" class="control-group">
+                     <div class="control-group">
                         <label for="sensitivitySlider" class="control-label">SENSITIVITY <span id="sensitivityValue" class="slider-value-label">(0%)</span></label>
                         <input type="range" id="sensitivitySlider" min="-100" max="100" value="0" step="1" class="slider w-full">
                     </div>
                     
-                    <div id="colorMatchControl" class="control-group hidden">
+                    <div class="control-group">
+                        <label for="videoBitrateSlider" class="control-label">VIDEO BITRATE <span id="videoBitrateValue" class="slider-value-label">(25 Mbps)</span></label>
+                        <input type="range" id="videoBitrateSlider" min="1" max="50" value="25" step="1" class="slider w-full">
+                    </div>
+
+                    <div id="colorMatchControl" class="control-group hidden col-span-1 sm:col-span-2 lg:col-span-1">
                         <label for="colorMatchThresholdSlider" class="control-label">COLOR THRESHOLD <span id="colorMatchThresholdValue" class="slider-value-label">(50)</span></label>
                         <div class="flex items-center gap-4">
                             <input type="range" id="colorMatchThresholdSlider" min="1" max="200" value="50" class="slider w-full">
@@ -293,7 +293,7 @@
                     <div id="videoRangeSlider" class="mb-2"></div> 
                     <div class="flex justify-between text-xs text-slate-600 mt-1">
                         <div>IN: <span id="rangeInValue">0.0</span>s</div>
-                        <div id="selectedDurationDisplay" class="font-semibold">0 FRAMES (0.0 SECONDS)</div>
+                        <div id="selectedDurationDisplay" class="font-semibold">0.0 SECONDS</div>
                         <div>OUT: <span id="rangeOutValue">5.0</span>s</div>
                     </div>
                 </div>
@@ -356,9 +356,9 @@
 
         const PREVIEW_CANVAS_MAX_DIM = 600; 
         const SUB_PREVIEW_MAX_DIM = 200; 
-        const TARGET_FPS = 30; 
         const MAX_PROCESSING_DURATION = 30; 
         let VIDEO_BITRATE = 25000000;
+        let TARGET_FPS = 30; // Default, will be updated from video metadata
 
         // --- DOM Elements ---
         const patternDensitySlider = document.getElementById('patternDensitySlider');
@@ -446,7 +446,7 @@
             invertToggle.addEventListener('change', generatePatternForCurrentFrame);
             analysisModeSelect.addEventListener('change', handleAnalysisModeChange);
             colorMatchColorPicker.addEventListener('input', generatePatternForCurrentFrame);
-
+            
             uploadButtonTrigger.addEventListener('click', () => videoUploadInput.click());
             videoUploadInput.addEventListener('change', handleVideoUpload);
             dropZone.addEventListener('click', () => videoUploadInput.click());
@@ -485,7 +485,7 @@
 
         function handleAnalysisModeChange(e) {
             const mode = e.target.value;
-            luminanceControl.classList.toggle('hidden', mode !== 'luminance');
+            luminanceControl.classList.toggle('hidden', mode === 'colorMatch');
             colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
             generatePatternForCurrentFrame();
         }
@@ -649,7 +649,7 @@
         function updateSelectedDurationDisplay() {
             const [start, end] = getRangeValues();
             const duration = Math.max(0, end - start);
-            selectedDurationDisplay.textContent = `${Math.floor(duration * TARGET_FPS)} FRAMES (${duration.toFixed(1)} SECONDS)`;
+            selectedDurationDisplay.textContent = `${duration.toFixed(1)} SECONDS`;
             const isInvalid = duration > MAX_PROCESSING_DURATION || duration <= 0 || start >= end || end > videoOriginalDuration || start < 0;
             selectedDurationDisplay.classList.toggle('text-red-500', isInvalid);
             updateProcessButtonState(); 
@@ -717,16 +717,15 @@
         }
 
         function generatePatternForCurrentFrame() {
-            // *** FIX APPLIED HERE ***
-            // The check for `isProcessingVideo` has been removed. 
-            // This ensures that this function runs correctly during the video export process.
             if (!offscreenFrameCanvas.width) return;
             
-            equalizeHistogram(offscreenFrameCtx);
+            if (analysisModeSelect.value === 'luminance') {
+                equalizeHistogram(offscreenFrameCtx);
+            }
 
             const density = parseInt(patternDensitySlider.value);
             const gridCols = density;
-            const gridRows = Math.round(density / videoAspectRatio);
+            const gridRows = Math.round(density / (outputPatternCanvas.width / outputPatternCanvas.height));
             const cellWidth = outputPatternCanvas.width / gridCols;
             const cellHeight = outputPatternCanvas.height / gridRows;
 
@@ -794,9 +793,15 @@
             ctx.fill();
         }
 
-        // --- Video Processing Loop ---
+        // --- Video Processing Loop (REBUILT FOR FRAME-ACCURACY) ---
         async function processVideo() {
-            if (isProcessingVideo) return;
+            if (isProcessingVideo || !('requestVideoFrameCallback' in sourceVideoElement)) {
+                if (!('requestVideoFrameCallback' in sourceVideoElement)) {
+                    alert("Your browser does not support 'requestVideoFrameCallback', which is required for accurate video processing. Please try a different browser like Chrome or Firefox.");
+                }
+                return;
+            }
+
             isProcessingVideo = true;
             updateProcessButtonState();
             progressContainer.classList.remove('hidden');
@@ -805,14 +810,33 @@
             progressBarFill.textContent = '0%';
             
             const [startTime, endTime] = getRangeValues();
-            const duration = endTime - startTime;
-            if (duration <= 0) { isProcessingVideo = false; updateProcessButtonState(); return; }
+            const totalDuration = endTime - startTime;
+            if (totalDuration <= 0) { isProcessingVideo = false; updateProcessButtonState(); return; }
 
-            const totalFrames = Math.floor(duration * TARGET_FPS);
-            const frameInterval = 1 / TARGET_FPS;
+            // Store original canvas size to restore it later
+            const originalPreviewWidth = outputPatternCanvas.width;
+            const originalPreviewHeight = outputPatternCanvas.height;
+            
+            // Set output canvas to full video resolution for high-quality export
+            outputPatternCanvas.width = sourceVideoElement.videoWidth;
+            outputPatternCanvas.height = sourceVideoElement.videoHeight;
+            offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
+            offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+
             recordedChunks = [];
             
-            const stream = outputPatternCanvas.captureStream(TARGET_FPS);
+            // Try to get the video's actual frame rate for the stream
+            let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
+            if (!videoTrack && currentVideoFile) {
+                // Fallback for when srcObject is not available
+                const tempVideo = document.createElement('video');
+                tempVideo.src = URL.createObjectURL(currentVideoFile);
+                await new Promise(res => tempVideo.onloadedmetadata = res);
+                videoTrack = tempVideo.captureStream().getVideoTracks()[0];
+            }
+            const actualFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
+
+            const stream = outputPatternCanvas.captureStream(actualFps);
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
 
             mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) recordedChunks.push(event.data); };
@@ -825,38 +849,47 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 
+                // Restore preview canvas to its original size
+                outputPatternCanvas.width = originalPreviewWidth;
+                outputPatternCanvas.height = originalPreviewHeight;
+                seekAndDrawPreview(endTime, endFramePreviewCanvas, endFramePreviewCtx, true).then(() => {
+                    generatePatternForCurrentFrame();
+                });
+
                 isProcessingVideo = false;
                 updateProcessButtonState();
                 progressText.textContent = "Complete!";
             };
+            
+            let frameCount = 0;
+            const processFrame = (now, metadata) => {
+                // Stop when the video's current time exceeds the end time
+                if (metadata.mediaTime >= endTime || sourceVideoElement.currentTime >= endTime) {
+                    if (mediaRecorder.state === "recording") {
+                        mediaRecorder.stop();
+                    }
+                    return;
+                }
 
-            mediaRecorder.start();
-
-            for (let i = 0; i < totalFrames; i++) {
-                const currentTime = startTime + i * frameInterval;
-                progressText.textContent = `Processing frame ${i + 1} of ${totalFrames}`;
-
-                await new Promise(resolve => {
-                    const onSeeked = () => {
-                        sourceVideoElement.removeEventListener('seeked', onSeeked);
-                        resolve();
-                    };
-                    sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
-                    sourceVideoElement.currentTime = currentTime;
-                });
-                
-                offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
-                offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
+                // Draw video frame to offscreen canvas, then generate pattern
                 offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
-                
                 generatePatternForCurrentFrame();
                 
-                const progress = ((i + 1) / totalFrames) * 100;
-                progressBarFill.style.width = `${progress}%`;
-                progressBarFill.textContent = `${Math.round(progress)}%`;
-            }
+                // Update progress bar
+                frameCount++;
+                progressText.textContent = `Processing frame ${frameCount}`;
+                const progress = ((metadata.mediaTime - startTime) / totalDuration) * 100;
+                progressBarFill.style.width = `${Math.min(100, progress)}%`;
+                progressBarFill.textContent = `${Math.round(Math.min(100, progress))}%`;
 
-            mediaRecorder.stop();
+                // Request the next frame
+                sourceVideoElement.requestVideoFrameCallback(processFrame);
+            };
+
+            // Start the process
+            mediaRecorder.start();
+            sourceVideoElement.currentTime = startTime;
+            sourceVideoElement.requestVideoFrameCallback(processFrame);
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
