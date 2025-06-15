@@ -289,8 +289,13 @@
                 </div>
                 
                 <div id="videoTrimControls" class="hidden flex-col pt-4">
+                    <label class="control-label text-xs mb-1">VIDEO STATS</label>
+                    <div class="flex justify-between text-xs text-slate-500 mt-1 mb-2">
+                        <div>TOTAL DURATION: <span id="totalDurationDisplay" class="font-semibold text-slate-600">--</span>s</div>
+                        <div>DETECTED FPS: <span id="fpsDisplay" class="font-semibold text-slate-600">--</span></div>
+                    </div>
                     <label class="control-label text-xs mb-1">IN / OUT</label>
-                    <div id="videoRangeSlider" class="mb-2"></div> 
+                    <div id="videoRangeSlider" class="mb-2"></div>
                     <div class="flex justify-between text-xs text-slate-600 mt-1">
                         <div>IN: <span id="rangeInValue">0.0</span>s</div>
                         <div id="selectedDurationDisplay" class="font-semibold">0.0 SECONDS</div>
@@ -418,9 +423,18 @@
         
         let mediaRecorder;
         let recordedChunks = [];
+        // NEW
+        // ... (other variables)
         let isProcessingVideo = false;
         let seeking = false;
         let debounceTimer;
+        let detectedFps = 0; // Add this line
+        
+        // --- DOM Elements ---
+        // ...
+        const totalDurationDisplay = document.getElementById('totalDurationDisplay'); // Add this line
+        const fpsDisplay = document.getElementById('fpsDisplay'); // Add this line
+        // ...
 
         // --- Initialization ---
         function initialize() {
@@ -460,19 +474,39 @@
                 }
             });
 
+            // NEW
             sourceVideoElement.addEventListener('loadedmetadata', async () => {
                 videoOriginalDuration = sourceVideoElement.duration;
                 videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
+            
+                // --- Calculate and Display FPS ---
+                let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
+                // A fallback mechanism to get the video track if not immediately available
+                if (!videoTrack && currentVideoFile) {
+                    const tempVideo = document.createElement('video');
+                    const objectURL = URL.createObjectURL(currentVideoFile);
+                    tempVideo.src = objectURL;
+                    await new Promise(res => tempVideo.onloadedmetadata = res);
+                    const tempStream = tempVideo.captureStream();
+                    videoTrack = tempStream.getVideoTracks()[0];
+                    URL.revokeObjectURL(objectURL);
+                }
+                detectedFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
                 
+                // --- Update the UI ---
+                totalDurationDisplay.textContent = videoOriginalDuration.toFixed(2);
+                fpsDisplay.textContent = detectedFps.toFixed(2);
+                // ---
+            
                 setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
-                
+            
                 videoTrimControls.classList.remove('hidden');
                 initializeRangeSlider(videoOriginalDuration);
-                
+            
                 const [start, end] = getRangeValues();
                 await seekAndDrawPreview(start, sourcePreviewCanvas, sourcePreviewCtx, true);
                 await seekAndDrawPreview(end, endFramePreviewCanvas, endFramePreviewCtx);
-
+            
                 updateProcessButtonState();
             });
             sourceVideoElement.addEventListener('error', () => {
@@ -822,17 +856,9 @@
             recordedChunks = [];
         
             // Determine the source video's actual frame rate
-            let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
-            if (!videoTrack && currentVideoFile) {
-                const tempVideo = document.createElement('video');
-                const objectURL = URL.createObjectURL(currentVideoFile);
-                tempVideo.src = objectURL;
-                await new Promise(res => tempVideo.onloadedmetadata = res);
-                const tempStream = tempVideo.captureStream();
-                videoTrack = tempStream.getVideoTracks()[0];
-                URL.revokeObjectURL(objectURL);
-            }
-            const actualFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
+            // NEW
+            // Use the globally detected FPS. Fallback to target FPS if detection failed.
+            const actualFps = detectedFps || TARGET_FPS;
             const totalFrames = Math.round(totalDuration * actualFps);
         
             const stream = outputPatternCanvas.captureStream(actualFps);
