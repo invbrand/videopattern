@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
     <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+    <!-- Add JSZip library for creating zip files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body {
             font-family: 'Roboto Mono', monospace;
@@ -249,7 +251,7 @@
                         <label for="maxShapeScaleSlider" class="control-label">MAX SHAPE SIZE <span id="maxShapeScaleValue" class="slider-value-label">(0.90)</span></label>
                         <input type="range" id="maxShapeScaleSlider" min="0.01" max="1.0" value="0.90" step="0.01" class="slider w-full">
                     </div>
-                     <div class="control-group">
+                     <div id="luminanceControl" class="control-group">
                         <label for="sensitivitySlider" class="control-label">SENSITIVITY <span id="sensitivityValue" class="slider-value-label">(0%)</span></label>
                         <input type="range" id="sensitivitySlider" min="-100" max="100" value="0" step="1" class="slider w-full">
                     </div>
@@ -259,7 +261,16 @@
                         <input type="range" id="videoBitrateSlider" min="1" max="50" value="25" step="1" class="slider w-full">
                     </div>
 
-                    <div id="colorMatchControl" class="control-group hidden col-span-1 sm:col-span-2 lg:col-span-1">
+                     <!-- New Download Mode Selector -->
+                    <div class="control-group">
+                        <label for="downloadModeSelect" class="control-label">Export Format</label>
+                        <select id="downloadModeSelect" class="select-input">
+                            <option value="video" selected>Vídeo (WEBM)</option>
+                            <option value="zip">Sequência de Imagens (ZIP)</option>
+                        </select>
+                    </div>
+
+                    <div id="colorMatchControl" class="control-group hidden col-span-1 sm:col-span-2 lg:col-span-3">
                         <label for="colorMatchThresholdSlider" class="control-label">COLOR THRESHOLD <span id="colorMatchThresholdValue" class="slider-value-label">(50)</span></label>
                         <div class="flex items-center gap-4">
                             <input type="range" id="colorMatchThresholdSlider" min="1" max="200" value="50" class="slider w-full">
@@ -387,6 +398,8 @@
         const colorMatchThresholdValue = document.getElementById('colorMatchThresholdValue');
         const colorMatchColorPicker = document.getElementById('colorMatchColorPicker');
 
+        const downloadModeSelect = document.getElementById('downloadModeSelect'); // New element
+
         const bgColorPickerContainer = document.getElementById('bgColorPickerContainer');
         const shapeColorPickerContainer = document.getElementById('shapeColorPickerContainer');
         
@@ -481,7 +494,6 @@
                     await new Promise(res => tempVideo.onloadedmetadata = res);
                     const tempStream = tempVideo.captureStream();
                     videoTrack = tempStream.getVideoTracks()[0];
-                    URL.revokeObjectURL(objectURL);
                 }
                 detectedFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
                 
@@ -499,17 +511,17 @@
             
                 updateProcessButtonState();
             });
-            sourceVideoElement.addEventListener('error', () => {
-                console.error('Video loading error.');
+            sourceVideoElement.addEventListener('error', (e) => {
+                console.error('Video loading error.', e);
                 resetVideoState();
             });
 
-            processVideoButton.addEventListener('click', processVideo);
+            processVideoButton.addEventListener('click', handleProcessing);
         }
 
         function handleAnalysisModeChange(e) {
             const mode = e.target.value;
-            if(luminanceControl) { // Check if element exists to prevent errors
+            if(luminanceControl) {
                 luminanceControl.classList.toggle('hidden', mode === 'colorMatch');
             }
             colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
@@ -816,9 +828,19 @@
             }
             ctx.fill();
         }
+        
+        // --- Main Processing Handler ---
+        function handleProcessing() {
+            const mode = downloadModeSelect.value;
+            if (mode === 'video') {
+                processAsVideo();
+            } else {
+                processAsZip();
+            }
+        }
 
-        // --- NEW, CORRECTED VIDEO PROCESSING FUNCTION ---
-        async function processVideo() {
+        // --- Frame Processing Loop (Shared by both Video and ZIP) ---
+        async function runFrameProcessingLoop(frameHandler) {
             if (isProcessingVideo) return;
 
             isProcessingVideo = true;
@@ -828,9 +850,7 @@
             const [startTime, endTime] = getRangeValues();
             const totalDuration = endTime - startTime;
             if (totalDuration <= 0) {
-                isProcessingVideo = false;
-                updateProcessButtonState();
-                return;
+                isProcessingVideo = false; updateProcessButtonState(); return;
             }
 
             const originalPreviewWidth = outputPatternCanvas.width;
@@ -841,100 +861,139 @@
             offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
             offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
 
-            recordedChunks = [];
-
             const actualFps = detectedFps || TARGET_FPS;
             const totalFrames = Math.round(totalDuration * actualFps);
             const frameInterval = 1000 / actualFps;
 
-            const stream = outputPatternCanvas.captureStream(actualFps);
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `pattern-video-${Date.now()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-
-                outputPatternCanvas.width = originalPreviewWidth;
-                outputPatternCanvas.height = originalPreviewHeight;
-                generatePatternForCurrentFrame();
-
-                isProcessingVideo = false;
-                updateProcessButtonState();
-                progressText.textContent = "Complete!";
-            };
-
-            mediaRecorder.start();
+            await frameHandler.beforeLoop(totalFrames);
 
             let currentFrame = 0;
             let lastTime = performance.now();
             let isSeeking = false;
 
             const mainLoop = async (now) => {
-                // End condition for the loop
                 if (currentFrame >= totalFrames) {
-                    if (mediaRecorder.state === 'recording') {
-                        mediaRecorder.stop();
-                    }
+                    await frameHandler.afterLoop();
+                    // Restore preview canvas
+                    outputPatternCanvas.width = originalPreviewWidth;
+                    outputPatternCanvas.height = originalPreviewHeight;
+                    generatePatternForCurrentFrame();
+                    isProcessingVideo = false;
+                    updateProcessButtonState();
                     return;
                 }
 
-                // Keep the loop running
                 requestAnimationFrame(mainLoop);
-
-                // If a frame is already being processed, wait for it to finish
-                if (isSeeking) {
-                    return;
-                }
+                if (isSeeking) return;
 
                 const deltaTime = now - lastTime;
-
-                // Check if enough real time has passed to justify rendering the next frame
                 if (deltaTime >= frameInterval) {
                     isSeeking = true;
                     lastTime = now - (deltaTime % frameInterval);
 
-                    // Calculate the precise timestamp for the frame and seek the video element
                     const timestamp = startTime + (currentFrame / actualFps);
                     sourceVideoElement.currentTime = Math.min(timestamp, sourceVideoElement.duration);
 
-                    // Wait for the seek operation to complete before proceeding
                     await new Promise(resolve => {
-                        const onSeeked = () => {
-                            sourceVideoElement.removeEventListener('seeked', onSeeked);
-                            resolve();
-                        };
-                        sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
+                        sourceVideoElement.addEventListener('seeked', resolve, { once: true });
                     });
 
-                    // Draw the frame to the offscreen canvas and generate the pattern
                     offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
                     generatePatternForCurrentFrame();
 
-                    // Update progress UI
-                    const progress = ((currentFrame + 1) / totalFrames) * 100;
-                    progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
-                    progressBarFill.style.width = `${progress}%`;
-                    progressBarFill.textContent = `${Math.round(progress)}%`;
-
+                    await frameHandler.onFrame(currentFrame, totalFrames);
+                    
                     currentFrame++;
                     isSeeking = false;
                 }
             };
-            
-            // Start the synchronized processing loop
+
             requestAnimationFrame(mainLoop);
+        }
+
+        // --- Video (WEBM) Export Logic ---
+        async function processAsVideo() {
+            let mediaRecorder;
+            let recordedChunks = [];
+
+            const frameHandler = {
+                beforeLoop: async () => {
+                    const actualFps = detectedFps || TARGET_FPS;
+                    const stream = outputPatternCanvas.captureStream(actualFps);
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
+                    recordedChunks = [];
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) recordedChunks.push(event.data);
+                    };
+                    mediaRecorder.start();
+                },
+                onFrame: async (currentFrame, totalFrames) => {
+                    const progress = ((currentFrame + 1) / totalFrames) * 100;
+                    progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
+                    progressBarFill.style.width = `${progress}%`;
+                    progressBarFill.textContent = `${Math.round(progress)}%`;
+                },
+                afterLoop: async () => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                    // Wait for ondataavailable to fire one last time
+                    await new Promise(resolve => setTimeout(resolve, 100)); 
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `pattern-video-${Date.now()}.webm`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    progressText.textContent = "Complete!";
+                }
+            };
+            runFrameProcessingLoop(frameHandler);
+        }
+
+        // --- Image Sequence (ZIP) Export Logic ---
+        async function processAsZip() {
+            const zip = new JSZip();
+            const frameFolder = zip.folder("processed_frames");
+
+            const frameHandler = {
+                beforeLoop: async () => {
+                    progressText.textContent = "Preparing frames...";
+                },
+                onFrame: async (currentFrame, totalFrames) => {
+                    const blob = await new Promise(resolve => outputPatternCanvas.toBlob(resolve, 'image/png'));
+                    const frameNumber = String(currentFrame + 1).padStart(5, '0');
+                    frameFolder.file(`frame_${frameNumber}.png`, blob);
+
+                    const progress = ((currentFrame + 1) / totalFrames) * 100;
+                    progressText.textContent = `Compressing frame ${currentFrame + 1} of ${totalFrames}`;
+                    progressBarFill.style.width = `${progress}%`;
+                    progressBarFill.textContent = `${Math.round(progress)}%`;
+                },
+                afterLoop: async () => {
+                    progressText.textContent = "Generating ZIP file...";
+                    const zipBlob = await zip.generateAsync({
+                        type: "blob",
+                        compression: "DEFLATE",
+                        compressionOptions: { level: 1 }
+                    });
+                    const url = URL.createObjectURL(zipBlob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `frame-sequence-${Date.now()}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    progressText.textContent = "Complete!";
+                }
+            };
+            runFrameProcessingLoop(frameHandler);
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
