@@ -793,8 +793,7 @@
             ctx.fill();
         }
 
-        // --- Video Processing Loop (REBUILT FOR FRAME-ACCURACY) ---
-        async function processVideo() {
+async function processVideo() {
             if (isProcessingVideo || !('requestVideoFrameCallback' in sourceVideoElement)) {
                 if (!('requestVideoFrameCallback' in sourceVideoElement)) {
                     alert("Your browser does not support 'requestVideoFrameCallback', which is required for accurate video processing. Please try a different browser like Chrome or Firefox.");
