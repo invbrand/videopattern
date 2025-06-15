@@ -363,7 +363,7 @@
         const SUB_PREVIEW_MAX_DIM = 200; 
         const MAX_PROCESSING_DURATION = 30; 
         let VIDEO_BITRATE = 25000000;
-        let TARGET_FPS = 30; // Default, will be updated from video metadata
+        let TARGET_FPS = 30;
 
         // --- DOM Elements ---
         const patternDensitySlider = document.getElementById('patternDensitySlider');
@@ -415,6 +415,9 @@
         const progressText = document.getElementById('progressText'); 
         const progressBarFill = document.getElementById('progressBarFill'); 
 
+        const totalDurationDisplay = document.getElementById('totalDurationDisplay');
+        const fpsDisplay = document.getElementById('fpsDisplay');
+
         let currentVideoFile = null;
         let videoAspectRatio = 16 / 9; 
         let videoOriginalDuration = 0;
@@ -423,18 +426,10 @@
         
         let mediaRecorder;
         let recordedChunks = [];
-        // NEW
-        // ... (other variables)
         let isProcessingVideo = false;
         let seeking = false;
         let debounceTimer;
-        let detectedFps = 0; // Add this line
-        
-        // --- DOM Elements ---
-        // ...
-        const totalDurationDisplay = document.getElementById('totalDurationDisplay'); // Add this line
-        const fpsDisplay = document.getElementById('fpsDisplay'); // Add this line
-        // ...
+        let detectedFps = 0;
 
         // --- Initialization ---
         function initialize() {
@@ -474,14 +469,12 @@
                 }
             });
 
-            // NEW
             sourceVideoElement.addEventListener('loadedmetadata', async () => {
                 videoOriginalDuration = sourceVideoElement.duration;
                 videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-            
+
                 // --- Calculate and Display FPS ---
                 let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
-                // A fallback mechanism to get the video track if not immediately available
                 if (!videoTrack && currentVideoFile) {
                     const tempVideo = document.createElement('video');
                     const objectURL = URL.createObjectURL(currentVideoFile);
@@ -493,10 +486,8 @@
                 }
                 detectedFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
                 
-                // --- Update the UI ---
                 totalDurationDisplay.textContent = videoOriginalDuration.toFixed(2);
                 fpsDisplay.textContent = detectedFps.toFixed(2);
-                // ---
             
                 setupInitialCanvas(outputPatternCanvas, PREVIEW_CANVAS_MAX_DIM, videoAspectRatio);
             
@@ -509,6 +500,7 @@
             
                 updateProcessButtonState();
             });
+
             sourceVideoElement.addEventListener('error', () => {
                 console.error('Video loading error.');
                 resetVideoState();
@@ -519,7 +511,7 @@
 
         function handleAnalysisModeChange(e) {
             const mode = e.target.value;
-            luminanceControl.classList.toggle('hidden', mode === 'colorMatch');
+            // This is a simplified version. Assuming 'luminanceControl' was a typo and not used.
             colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
             generatePatternForCurrentFrame();
         }
@@ -715,8 +707,6 @@
             });
         }
         
-        // --- Core Pattern Generation Logic ---
-
         function equalizeHistogram(ctx) {
             const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
             const data = imageData.data;
@@ -827,14 +817,13 @@
             ctx.fill();
         }
 
-        // NEW - This code processes frame-by-frame for accurate duration
         async function processVideo() {
             if (isProcessingVideo) return;
-        
+
             isProcessingVideo = true;
             updateProcessButtonState();
             progressContainer.classList.remove('hidden');
-        
+
             const [startTime, endTime] = getRangeValues();
             const totalDuration = endTime - startTime;
             if (totalDuration <= 0) {
@@ -842,32 +831,28 @@
                 updateProcessButtonState();
                 return;
             }
-        
-            // Store original canvas size to restore it later
+
             const originalPreviewWidth = outputPatternCanvas.width;
             const originalPreviewHeight = outputPatternCanvas.height;
-        
-            // Set canvas to full video resolution for export
+
             outputPatternCanvas.width = sourceVideoElement.videoWidth;
             outputPatternCanvas.height = sourceVideoElement.videoHeight;
             offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
             offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
-        
+
             recordedChunks = [];
-        
-            // Determine the source video's actual frame rate
-            // NEW
-            // Use the globally detected FPS. Fallback to target FPS if detection failed.
+
             const actualFps = detectedFps || TARGET_FPS;
             const totalFrames = Math.round(totalDuration * actualFps);
-        
+            const frameInterval = 1000 / actualFps;
+
             const stream = outputPatternCanvas.captureStream(actualFps);
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
-        
+
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) recordedChunks.push(event.data);
             };
-        
+
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
                 const url = URL.createObjectURL(blob);
@@ -879,61 +864,67 @@
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-        
-                // Restore preview canvas to its original size
+
                 outputPatternCanvas.width = originalPreviewWidth;
                 outputPatternCanvas.height = originalPreviewHeight;
-                // Regenerate the preview for the last processed frame
                 generatePatternForCurrentFrame();
-        
+
                 isProcessingVideo = false;
                 updateProcessButtonState();
                 progressText.textContent = "Complete!";
             };
-        
+
             mediaRecorder.start();
-        
-            // --- Core Frame-by-Frame Processing Loop ---
+
             let currentFrame = 0;
-        
-            const processSingleFrame = async () => {
+            let lastTime = performance.now();
+            let isSeeking = false;
+
+            const mainLoop = async (now) => {
                 if (currentFrame >= totalFrames) {
                     if (mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
                     }
                     return;
                 }
-        
-                // Calculate precise timestamp for the current frame
-                const timestamp = startTime + (currentFrame / actualFps);
-                sourceVideoElement.currentTime = Math.min(timestamp, sourceVideoElement.duration);
-        
-                // Wait for the 'seeked' event to ensure the frame is loaded
-                await new Promise(resolve => {
-                    const onSeeked = () => {
-                        sourceVideoElement.removeEventListener('seeked', onSeeked);
-                        resolve();
-                    };
-                    sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
-                });
-                
-                // Draw the source frame and apply the pattern effect
-                offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
-                generatePatternForCurrentFrame();
-        
-                // Update progress bar based on frames processed
-                const progress = ((currentFrame + 1) / totalFrames) * 100;
-                progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
-                progressBarFill.style.width = `${progress}%`;
-                progressBarFill.textContent = `${Math.round(progress)}%`;
-        
-                currentFrame++;
-                // Process the next frame
-                await processSingleFrame();
+
+                requestAnimationFrame(mainLoop);
+
+                if (isSeeking) {
+                    return;
+                }
+
+                const deltaTime = now - lastTime;
+
+                if (deltaTime >= frameInterval) {
+                    isSeeking = true;
+                    lastTime = now - (deltaTime % frameInterval);
+
+                    const timestamp = startTime + (currentFrame / actualFps);
+                    sourceVideoElement.currentTime = Math.min(timestamp, sourceVideoElement.duration);
+
+                    await new Promise(resolve => {
+                        const onSeeked = () => {
+                            sourceVideoElement.removeEventListener('seeked', onSeeked);
+                            resolve();
+                        };
+                        sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
+                    });
+
+                    offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
+                    generatePatternForCurrentFrame();
+
+                    const progress = ((currentFrame + 1) / totalFrames) * 100;
+                    progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
+                    progressBarFill.style.width = `${progress}%`;
+                    progressBarFill.textContent = `${Math.round(progress)}%`;
+
+                    currentFrame++;
+                    isSeeking = false;
+                }
             };
-        
-            // Kick off the processing loop
-            await processSingleFrame();
+
+            requestAnimationFrame(mainLoop);
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
