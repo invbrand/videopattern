@@ -793,38 +793,35 @@
             ctx.fill();
         }
 
-async function processVideo() {
-            if (isProcessingVideo || !('requestVideoFrameCallback' in sourceVideoElement)) {
-                if (!('requestVideoFrameCallback' in sourceVideoElement)) {
-                    alert("Your browser does not support 'requestVideoFrameCallback', which is required for accurate video processing. Please try a different browser like Chrome or Firefox.");
-                }
-                return;
-            }
-
+        // NEW - This code processes frame-by-frame for accurate duration
+        async function processVideo() {
+            if (isProcessingVideo) return;
+        
             isProcessingVideo = true;
             updateProcessButtonState();
             progressContainer.classList.remove('hidden');
-            progressText.textContent = 'Initializing...';
-            progressBarFill.style.width = '0%';
-            progressBarFill.textContent = '0%';
-            
+        
             const [startTime, endTime] = getRangeValues();
             const totalDuration = endTime - startTime;
-            if (totalDuration <= 0) { isProcessingVideo = false; updateProcessButtonState(); return; }
-
+            if (totalDuration <= 0) {
+                isProcessingVideo = false;
+                updateProcessButtonState();
+                return;
+            }
+        
             // Store original canvas size to restore it later
             const originalPreviewWidth = outputPatternCanvas.width;
             const originalPreviewHeight = outputPatternCanvas.height;
-            
-            // Set output canvas to full video resolution for high-quality export
+        
+            // Set canvas to full video resolution for export
             outputPatternCanvas.width = sourceVideoElement.videoWidth;
             outputPatternCanvas.height = sourceVideoElement.videoHeight;
             offscreenFrameCanvas.width = sourceVideoElement.videoWidth;
             offscreenFrameCanvas.height = sourceVideoElement.videoHeight;
-
+        
             recordedChunks = [];
-            
-            // Try to get the video's actual frame rate for the stream
+        
+            // Determine the source video's actual frame rate
             let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
             if (!videoTrack && currentVideoFile) {
                 const tempVideo = document.createElement('video');
@@ -833,80 +830,84 @@ async function processVideo() {
                 await new Promise(res => tempVideo.onloadedmetadata = res);
                 const tempStream = tempVideo.captureStream();
                 videoTrack = tempStream.getVideoTracks()[0];
-                URL.revokeObjectURL(objectURL); 
+                URL.revokeObjectURL(objectURL);
             }
             const actualFps = videoTrack?.getSettings()?.frameRate || TARGET_FPS;
-
+            const totalFrames = Math.round(totalDuration * actualFps);
+        
             const stream = outputPatternCanvas.captureStream(actualFps);
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: VIDEO_BITRATE });
-
-            mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) recordedChunks.push(event.data); };
+        
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+        
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.style.display = 'none'; a.href = url; a.download = `pattern-video-${Date.now()}.webm`;
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `pattern-video-${Date.now()}.webm`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                
+        
                 // Restore preview canvas to its original size
                 outputPatternCanvas.width = originalPreviewWidth;
                 outputPatternCanvas.height = originalPreviewHeight;
-                seekAndDrawPreview(endTime, endFramePreviewCanvas, endFramePreviewCtx, true).then(() => {
-                    generatePatternForCurrentFrame();
-                });
-
+                // Regenerate the preview for the last processed frame
+                generatePatternForCurrentFrame();
+        
                 isProcessingVideo = false;
                 updateProcessButtonState();
                 progressText.textContent = "Complete!";
             };
-            
-            let frameCount = 0;
-            const processFrame = (now, metadata) => {
-                // Stop when the video's current time exceeds the end time
-                if (sourceVideoElement.currentTime >= endTime) {
-                    sourceVideoElement.pause(); // FIX: Pause playback
-                    if (mediaRecorder.state === "recording") {
+        
+            mediaRecorder.start();
+        
+            // --- Core Frame-by-Frame Processing Loop ---
+            let currentFrame = 0;
+        
+            const processSingleFrame = async () => {
+                if (currentFrame >= totalFrames) {
+                    if (mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
                     }
-                    return; // Stop the callback loop
+                    return;
                 }
-
-                // Draw video frame to offscreen canvas, then generate pattern
+        
+                // Calculate precise timestamp for the current frame
+                const timestamp = startTime + (currentFrame / actualFps);
+                sourceVideoElement.currentTime = Math.min(timestamp, sourceVideoElement.duration);
+        
+                // Wait for the 'seeked' event to ensure the frame is loaded
+                await new Promise(resolve => {
+                    const onSeeked = () => {
+                        sourceVideoElement.removeEventListener('seeked', onSeeked);
+                        resolve();
+                    };
+                    sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
+                });
+                
+                // Draw the source frame and apply the pattern effect
                 offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
                 generatePatternForCurrentFrame();
-                
-                // Update progress bar
-                frameCount++;
-                progressText.textContent = `Processing frame ${frameCount}`;
-                const progress = ((sourceVideoElement.currentTime - startTime) / totalDuration) * 100;
-                progressBarFill.style.width = `${Math.min(100, progress)}%`;
-                progressBarFill.textContent = `${Math.round(Math.min(100, progress))}%`;
-
-                // Request the next frame
-                sourceVideoElement.requestVideoFrameCallback(processFrame);
+        
+                // Update progress bar based on frames processed
+                const progress = ((currentFrame + 1) / totalFrames) * 100;
+                progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
+                progressBarFill.style.width = `${progress}%`;
+                progressBarFill.textContent = `${Math.round(progress)}%`;
+        
+                currentFrame++;
+                // Process the next frame
+                await processSingleFrame();
             };
-
-            // Start the process
-            sourceVideoElement.addEventListener('seeked', async function onSeeked() {
-                sourceVideoElement.removeEventListener('seeked', onSeeked);
-                
-                try {
-                    mediaRecorder.start();
-                    await sourceVideoElement.play(); // FIX: Start playback
-                    sourceVideoElement.requestVideoFrameCallback(processFrame);
-                } catch(e) {
-                    console.error("Error starting video processing:", e);
-                    isProcessingVideo = false;
-                    updateProcessButtonState();
-                }
-
-            }, { once: true });
-            
-            sourceVideoElement.currentTime = startTime;
-
+        
+            // Kick off the processing loop
+            await processSingleFrame();
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
