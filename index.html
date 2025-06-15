@@ -472,8 +472,7 @@
             sourceVideoElement.addEventListener('loadedmetadata', async () => {
                 videoOriginalDuration = sourceVideoElement.duration;
                 videoAspectRatio = sourceVideoElement.videoWidth / sourceVideoElement.videoHeight;
-
-                // --- Calculate and Display FPS ---
+            
                 let videoTrack = sourceVideoElement.srcObject?.getVideoTracks()[0];
                 if (!videoTrack && currentVideoFile) {
                     const tempVideo = document.createElement('video');
@@ -500,7 +499,6 @@
             
                 updateProcessButtonState();
             });
-
             sourceVideoElement.addEventListener('error', () => {
                 console.error('Video loading error.');
                 resetVideoState();
@@ -511,7 +509,9 @@
 
         function handleAnalysisModeChange(e) {
             const mode = e.target.value;
-            // This is a simplified version. Assuming 'luminanceControl' was a typo and not used.
+            if(luminanceControl) { // Check if element exists to prevent errors
+                luminanceControl.classList.toggle('hidden', mode === 'colorMatch');
+            }
             colorMatchControl.classList.toggle('hidden', mode !== 'colorMatch');
             generatePatternForCurrentFrame();
         }
@@ -817,6 +817,7 @@
             ctx.fill();
         }
 
+        // --- NEW, CORRECTED VIDEO PROCESSING FUNCTION ---
         async function processVideo() {
             if (isProcessingVideo) return;
 
@@ -881,6 +882,7 @@
             let isSeeking = false;
 
             const mainLoop = async (now) => {
+                // End condition for the loop
                 if (currentFrame >= totalFrames) {
                     if (mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
@@ -888,21 +890,26 @@
                     return;
                 }
 
+                // Keep the loop running
                 requestAnimationFrame(mainLoop);
 
+                // If a frame is already being processed, wait for it to finish
                 if (isSeeking) {
                     return;
                 }
 
                 const deltaTime = now - lastTime;
 
+                // Check if enough real time has passed to justify rendering the next frame
                 if (deltaTime >= frameInterval) {
                     isSeeking = true;
                     lastTime = now - (deltaTime % frameInterval);
 
+                    // Calculate the precise timestamp for the frame and seek the video element
                     const timestamp = startTime + (currentFrame / actualFps);
                     sourceVideoElement.currentTime = Math.min(timestamp, sourceVideoElement.duration);
 
+                    // Wait for the seek operation to complete before proceeding
                     await new Promise(resolve => {
                         const onSeeked = () => {
                             sourceVideoElement.removeEventListener('seeked', onSeeked);
@@ -911,9 +918,11 @@
                         sourceVideoElement.addEventListener('seeked', onSeeked, { once: true });
                     });
 
+                    // Draw the frame to the offscreen canvas and generate the pattern
                     offscreenFrameCtx.drawImage(sourceVideoElement, 0, 0, offscreenFrameCanvas.width, offscreenFrameCanvas.height);
                     generatePatternForCurrentFrame();
 
+                    // Update progress UI
                     const progress = ((currentFrame + 1) / totalFrames) * 100;
                     progressText.textContent = `Processing frame ${currentFrame + 1} of ${totalFrames}`;
                     progressBarFill.style.width = `${progress}%`;
@@ -923,7 +932,8 @@
                     isSeeking = false;
                 }
             };
-
+            
+            // Start the synchronized processing loop
             requestAnimationFrame(mainLoop);
         }
 
